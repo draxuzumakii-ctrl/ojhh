@@ -12,51 +12,38 @@
 <style>
   body { display: flex; }
   .dev-layout { display: flex; width: 100%; min-height: 100vh; }
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
   .status-dot.active { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.6); }
   .status-dot.inactive { background: #64748b; }
 </style>
 </head>
 <body>
-<!-- 1. Firebase SDK: wajib dimuat sebelum inisialisasi -->
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
 
-<!-- 2. Konfigurasi Firebase -->
-<script src="./firebase-config.js"></script>
-
-<!-- 3. Inisialisasi Firebase -->
-<script src="./firebase-init.js"></script>
-
-<!-- 4. Core utilities -->
-<script src="./ryedz-core.js"></script>
-
-<!-- 5. Script khusus halaman -->
-<script src="./app.js"></script>
-<div class="mobile-header-bar">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <button class="btn btn-secondary btn-sm" onclick="toggleSidebar()" aria-label="Menu">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-      </svg>
-    </button>
-    <span style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">Developer Center</span>
+<!-- LAYAR BLOKIR (KALAU BUKAN DEVELOPER) -->
+<div id="blocked-screen" style="display:none; min-height:100vh; width:100%; align-items:center; justify-content:center; padding:24px; background:#08080c;">
+  <div class="glass" style="max-width:420px; padding:36px; text-align:center; border-radius:20px;">
+    <div style="width:60px; height:60px; border-radius:16px; background:rgba(244,63,94,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:#fda4af; font-size:1.8rem;">🛡</div>
+    <h2 style="color:#fff; font-size:1.3rem; font-weight:800; margin-bottom:10px;">AKSES DITOLAK</h2>
+    <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:24px;">Database mencatat kamu bukan Developer. Jangan coba-coba bypass!</p>
+    <a href="index.html" class="btn btn-secondary">Kembali ke Beranda</a>
   </div>
 </div>
 
-<div class="dev-layout">
-  <!-- SIDEBAR -->
+<!-- LAYAR UTAMA (KALAU DEVELOPER) -->
+<div class="dev-layout" id="main-app" style="display:none;">
+  
+  <div class="mobile-header-bar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-secondary btn-sm" onclick="toggleSidebar()" aria-label="Menu">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <span style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">Developer Center</span>
+    </div>
+  </div>
+
   <aside class="sidebar" id="sidebar">
     <a href="index.html" class="brand" style="margin-bottom:20px;">
-      <div class="brand-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg>
-      </div>
+      <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg></div>
       <span>RYEDZ DEV</span>
     </a>
 
@@ -68,23 +55,15 @@
         <span class="badge-count" id="badge-pending-count">0</span>
       </div></li>
       <li><div class="nav-item" onclick="switchTab('users')" id="nav-users">4. Users</div></li>
-      <li><div class="nav-item" onclick="switchTab('admins')" id="nav-admins">5. Admins</div></li>
-      <li><div class="nav-item" onclick="switchTab('maintenance')" id="nav-maintenance">
-        <span>6. Maintenance</span>
-        <span class="status-dot" id="maint-indicator"></span>
-      </div></li>
-      <li><div class="nav-item" onclick="switchTab('content')" id="nav-content">7. Content</div></li>
-      <li><div class="nav-item" onclick="switchTab('audit')" id="nav-audit">8. Audit Logs</div></li>
-      <li><div class="nav-item" onclick="switchTab('settings')" id="nav-settings">9. Settings</div></li>
     </ul>
 
     <div class="sidebar-user">
       <div class="avatar-circle" style="background:linear-gradient(135deg,#a855f7,#ec4899);">D</div>
       <div class="user-info-text">
-        <div class="user-name" id="dev-email-badge">dev@ryedz.com</div>
+        <div class="user-name" id="dev-email-badge">Memuat...</div>
         <div class="user-role-badge" style="color:#c084fc;">SUPER DEV</div>
       </div>
-      <button onclick="handleLogout()" class="btn btn-secondary btn-sm btn-icon" title="Logout" aria-label="Logout">
+      <button onclick="handleLogout()" class="btn btn-secondary btn-sm btn-icon" title="Logout">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
       </button>
     </div>
@@ -92,33 +71,27 @@
 
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-  <!-- MAIN -->
   <main class="main-wrapper">
     <!-- OVERVIEW -->
     <section class="dev-view active" id="view-overview">
       <div class="top-header">
         <div>
           <h1 class="page-title">Developer Center</h1>
-          <p class="page-subtitle">Full control & moderation.</p>
+          <p class="page-subtitle">Full control & moderation via Firebase.</p>
         </div>
-        <a href="promt.html" class="btn btn-secondary btn-sm" target="_blank">Open Vault ↗</a>
+        <a href="index.html" class="btn btn-secondary btn-sm" target="_blank">Open Vault ↗</a>
       </div>
       <div class="stats-grid">
-        <div class="glass stat-card"><div class="stat-label">Users</div><div class="stat-value" id="stat-users">0</div></div>
-        <div class="glass stat-card"><div class="stat-label">Prompts</div><div class="stat-value" id="stat-prompts">0</div></div>
+        <div class="glass stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="stat-users">0</div></div>
+        <div class="glass stat-card"><div class="stat-label">Total Prompts</div><div class="stat-value" id="stat-prompts">0</div></div>
         <div class="glass stat-card"><div class="stat-label">Published</div><div class="stat-value" style="color:#6ee7b7;" id="stat-published">0</div></div>
         <div class="glass stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:#fcd34d;" id="stat-pending">0</div></div>
         <div class="glass stat-card"><div class="stat-label">Rejected</div><div class="stat-value" style="color:#fda4af;" id="stat-rejected">0</div></div>
-        <div class="glass stat-card"><div class="stat-label">Admins</div><div class="stat-value" style="color:#7dd3fc;" id="stat-admins">0</div></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px;">
         <div class="glass" style="padding:20px;">
-          <h3 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:14px;">Pending Queue</h3>
-          <div id="quick-pending-list"></div>
-        </div>
-        <div class="glass" style="padding:20px;">
-          <h3 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:14px;">Recent Audit</h3>
-          <div id="quick-audit-list"></div>
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:14px;">Antrean Pending</h3>
+          <div id="quick-pending-list">Memuat...</div>
         </div>
       </div>
     </section>
@@ -132,29 +105,22 @@
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-        <input type="text" id="filter-prompts-input" placeholder="Search..." class="glass-input" style="flex:1;min-width:200px;" oninput="renderAllPromptsTable()" />
-        <select id="filter-prompts-ai" class="glass-input" style="max-width:180px;" onchange="renderAllPromptsTable()">
-          <option value="all">All AI</option>
-          <option value="ChatGPT">ChatGPT</option>
-          <option value="Claude">Claude</option>
-          <option value="Google Gemini">Google Gemini</option>
-          <option value="DeepSeek">DeepSeek</option>
-        </select>
+        <input type="text" id="filter-prompts-input" placeholder="Cari judul atau email..." class="glass-input" style="flex:1;min-width:200px;" oninput="renderAllPromptsTable()" />
       </div>
       <div class="glass table-container">
         <table>
-          <thead><tr><th>Title</th><th>AI</th><th>Author</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Title</th><th>AI</th><th>Author</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="all-prompts-tbody"></tbody>
         </table>
       </div>
     </section>
 
-    <!-- PENDING -->
+    <!-- PENDING MODERATION -->
     <section class="dev-view" id="view-pending">
       <div class="top-header">
         <div>
           <h1 class="page-title">Pending Moderation</h1>
-          <p class="page-subtitle">Approve or reject.</p>
+          <p class="page-subtitle">Approve atau Reject.</p>
         </div>
       </div>
       <div id="pending-queue-container" style="display:flex;flex-direction:column;gap:16px;"></div>
@@ -165,145 +131,14 @@
       <div class="top-header">
         <div>
           <h1 class="page-title">User Directory</h1>
-          <p class="page-subtitle">All registered users.</p>
+          <p class="page-subtitle">Semua user terdaftar.</p>
         </div>
       </div>
       <div class="glass table-container">
         <table>
-          <thead><tr><th>User</th><th>Role</th><th>Joined</th><th>Action</th></tr></thead>
+          <thead><tr><th>User</th><th>Role</th><th>Joined</th></tr></thead>
           <tbody id="users-tbody"></tbody>
         </table>
-      </div>
-    </section>
-
-    <!-- ADMINS -->
-    <section class="dev-view" id="view-admins">
-      <div class="top-header">
-        <div>
-          <h1 class="page-title">Admin Management</h1>
-          <p class="page-subtitle">Promote / demote.</p>
-        </div>
-      </div>
-      <div class="glass" style="padding:20px;margin-bottom:20px;">
-        <h3 style="font-size:1rem;color:var(--text-primary);margin-bottom:12px;">Promote to Admin</h3>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <input type="email" id="promote-email-input" placeholder="user@example.com" class="glass-input" style="flex:1;min-width:200px;" />
-          <button class="btn btn-primary" onclick="promoteToAdmin()">Grant</button>
-        </div>
-      </div>
-      <div class="glass table-container">
-        <table>
-          <thead><tr><th>Email</th><th>Name</th><th>Actions</th></tr></thead>
-          <tbody id="admins-tbody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- MAINTENANCE -->
-    <section class="dev-view" id="view-maintenance">
-      <div class="top-header">
-        <div>
-          <h1 class="page-title">Maintenance</h1>
-          <p class="page-subtitle">Control site status.</p>
-        </div>
-      </div>
-      <div class="glass" style="max-width:680px;padding:24px;">
-        <form onsubmit="handleSaveMaintenance(event)">
-          <div class="form-group">
-            <label class="form-label">System Mode</label>
-            <select id="maint-mode-select" class="glass-input" style="font-weight:600;">
-              <option value="NORMAL">NORMAL</option>
-              <option value="NOTICE">NOTICE</option>
-              <option value="LIMITED">LIMITED</option>
-              <option value="MAINTENANCE">MAINTENANCE</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Title</label>
-            <input type="text" id="maint-title-input" class="glass-input" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Description</label>
-            <textarea id="maint-desc-input" class="glass-input" style="height:100px;"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Reason</label>
-            <input type="text" id="maint-reason-input" class="glass-input" />
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-            <input type="checkbox" id="maint-active-checkbox" style="width:20px;height:20px;" />
-            <label for="maint-active-checkbox" style="font-weight:600;color:var(--text-primary);">Activate Now</label>
-          </div>
-          <button type="submit" class="btn btn-primary">Save</button>
-        </form>
-      </div>
-    </section>
-
-    <!-- CONTENT -->
-    <section class="dev-view" id="view-content">
-      <div class="top-header">
-        <div>
-          <h1 class="page-title">Website Content</h1>
-          <p class="page-subtitle">Customize landing page.</p>
-        </div>
-      </div>
-      <div class="glass" style="max-width:680px;padding:24px;">
-        <form onsubmit="handleSaveContent(event)">
-          <div class="form-group">
-            <label class="form-label">Hero Title</label>
-            <input type="text" id="content-hero-title" class="glass-input" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Hero Subtitle</label>
-            <textarea id="content-hero-desc" class="glass-input" style="height:100px;"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Footer Text</label>
-            <input type="text" id="content-footer-text" class="glass-input" />
-          </div>
-          <button type="submit" class="btn btn-primary">Publish</button>
-        </form>
-      </div>
-    </section>
-
-    <!-- AUDIT -->
-    <section class="dev-view" id="view-audit">
-      <div class="top-header">
-        <div>
-          <h1 class="page-title">Audit Logs</h1>
-          <p class="page-subtitle">All actions logged.</p>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="loadAuditLogs()">Refresh</button>
-      </div>
-      <div class="glass table-container">
-        <table>
-          <thead><tr><th>Action</th><th>Details</th><th>Actor</th><th>Time</th></tr></thead>
-          <tbody id="audit-logs-tbody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SETTINGS -->
-    <section class="dev-view" id="view-settings">
-      <div class="top-header">
-        <div>
-          <h1 class="page-title">Settings</h1>
-          <p class="page-subtitle">Export & reset.</p>
-        </div>
-      </div>
-      <div class="glass" style="max-width:600px;padding:24px;">
-        <div style="margin-bottom:20px;">
-          <div style="font-weight:700;color:var(--text-primary);margin-bottom:4px;">Super Developer</div>
-          <div style="color:#c084fc;font-family:var(--font-mono);font-size:0.9rem;">ryedzoffc@gmail.com</div>
-        </div>
-        <div style="border-top:1px solid var(--glass-border);padding-top:20px;margin-bottom:24px;">
-          <div style="font-weight:700;color:var(--text-primary);margin-bottom:8px;">Database</div>
-          <div style="color:#6ee7b7;font-size:0.9rem;">✓ Local Vault Synchronized</div>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="exportData()">Export JSON</button>
-          <button class="btn btn-danger btn-sm" onclick="resetToInitialSeed()">Reset Platform</button>
-        </div>
       </div>
     </section>
   </main>
@@ -322,31 +157,217 @@
   </div>
 </div>
 
+<!-- FIREBASE SDK & INIT -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="firebase-init.js"></script>
 <script src="ryedz-core.js"></script>
+
 <script>
   'use strict';
-  const R = window.Ryedz;
   let currentUser = null;
+  let allPromptsCache = [];
 
-  function initDev() {
-    const sess = R.getSessionUser();
-    if (!sess || (sess.role !== 'developer' && sess.email !== 'ryedzoffc@gmail.com')) {
-      document.body.innerHTML = `
-        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
-          <div class="glass" style="max-width:420px;padding:36px;text-align:center;border-radius:20px;">
-            <div style="width:60px;height:60px;border-radius:16px;background:var(--accent-primary-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:#c084fc;font-size:1.8rem;">🛡</div>
-            <h2 style="color:var(--text-primary);font-size:1.3rem;font-weight:800;margin-bottom:10px;">Developer Area</h2>
-            <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:24px;">Hanya Super Developer.</p>
-            <a href="index.html" class="btn btn-primary">Ke Login</a>
-          </div>
-        </div>`;
+  // ==========================================
+  // CEK KEAMANAN SUPER KETAT (Anti-Bobol)
+  // ==========================================
+  RyedzFB.onAuthChange((user, profile) => {
+    if (!user) {
+      window.location.href = 'login.html';
       return;
     }
-    currentUser = sess;
-    document.getElementById('dev-email-badge').textContent = currentUser.email;
-    refreshAllData();
+    
+    // VALIDASI DATABASE: Jika role bukan developer, tendang!
+    if (profile.role !== 'developer') {
+      document.getElementById('blocked-screen').style.display = 'flex';
+      document.getElementById('main-app').style.display = 'none';
+      return;
+    }
+
+    // Lolos, tampilkan aplikasi
+    currentUser = user;
+    document.getElementById('blocked-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'flex';
+    document.getElementById('dev-email-badge').textContent = user.email;
+
+    initRealtimeData();
+  });
+
+  // ==========================================
+  // REAL-TIME DATA (LANGSUNG DARI FIREBASE)
+  // ==========================================
+  function initRealtimeData() {
+    // 1. Listener Prompts (Real-time)
+    RyedzFB.db.collection('prompts').orderBy('createdAt', 'desc')
+      .onSnapshot(snap => {
+        allPromptsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        // Hitung Stats
+        document.getElementById('stat-prompts').textContent = allPromptsCache.length;
+        document.getElementById('stat-published').textContent = allPromptsCache.filter(p => p.status === 'published').length;
+        document.getElementById('stat-pending').textContent = allPromptsCache.filter(p => p.status === 'pending').length;
+        document.getElementById('stat-rejected').textContent = allPromptsCache.filter(p => p.status === 'rejected').length;
+        document.getElementById('badge-pending-count').textContent = allPromptsCache.filter(p => p.status === 'pending').length;
+
+        // Render UI
+        renderQuickPending();
+        renderPendingQueue();
+        renderAllPromptsTable();
+      });
+
+    // 2. Listener Users (Real-time)
+    RyedzFB.db.collection('users').onSnapshot(snap => {
+      const users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      document.getElementById('stat-users').textContent = users.length;
+      renderUsersTable(users);
+    });
   }
 
+  // ==========================================
+  // RENDER FUNCTIONS
+  // ==========================================
+  function renderQuickPending() {
+    const pending = allPromptsCache.filter(p => p.status === 'pending');
+    const el = document.getElementById('quick-pending-list');
+    if (pending.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-tertiary);font-size:0.85rem;">Bersih ✓</div>';
+      return;
+    }
+    el.innerHTML = pending.slice(0, 3).map(p => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #333;gap:8px;">
+        <div style="min-width:0;flex:1;">
+          <div style="font-weight:600;color:#fff;font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${Ryedz.escapeXml(p.title)}</div>
+          <div style="font-size:0.72rem;color:#94a3b8;">${Ryedz.escapeXml(p.aiModel || 'ChatGPT')}</div>
+        </div>
+        <button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓</button>
+      </div>
+    `).join('');
+  }
+
+  function renderPendingQueue() {
+    const pending = allPromptsCache.filter(p => p.status === 'pending');
+    const container = document.getElementById('pending-queue-container');
+    if (pending.length === 0) {
+      container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;color:#94a3b8;">Antrean kosong! ✓</div>';
+      return;
+    }
+    container.innerHTML = pending.map(p => `
+      <div class="glass" style="padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
+          <div style="min-width:0;flex:1;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+              <span class="badge badge-amber">PENDING</span>
+              <span class="badge badge-ai">${Ryedz.escapeXml(p.aiModel || 'ChatGPT')}</span>
+            </div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:4px;">${Ryedz.escapeXml(p.title)}</h3>
+            <div style="font-size:0.78rem;color:#94a3b8;">By ${Ryedz.escapeXml(p.ownerEmail || 'User')}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓ Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="openRejectModal('${p.id}')">✕ Reject</button>
+          </div>
+        </div>
+        <pre style="white-space:pre-wrap;font-family:monospace;font-size:0.85rem;color:#fff;line-height:1.5;background:rgba(0,0,0,0.3);border:1px solid #333;border-radius:10px;padding:14px;max-height:200px;overflow-y:auto;">${Ryedz.escapeXml(p.content)}</pre>
+      </div>
+    `).join('');
+  }
+
+  function renderAllPromptsTable() {
+    const filter = (document.getElementById('filter-prompts-input').value || '').toLowerCase().trim();
+    const filtered = allPromptsCache.filter(p => {
+      return !filter || ((p.title || '') + ' ' + (p.ownerEmail || '')).toLowerCase().includes(filter);
+    });
+
+    const tbody = document.getElementById('all-prompts-tbody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:24px;">Tidak ada data.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.map(p => {
+      const cls = p.status === 'published' ? 'badge-green' : p.status === 'pending' ? 'badge-amber' : 'badge-red';
+      return `
+        <tr>
+          <td data-label="Title"><div style="font-weight:600;color:#fff;">${Ryedz.escapeXml(p.title)}</div></td>
+          <td data-label="AI"><span class="badge badge-ai">${Ryedz.escapeXml(p.aiModel || 'ChatGPT')}</span></td>
+          <td data-label="Author">${Ryedz.escapeXml(p.ownerEmail || 'User')}</td>
+          <td data-label="Status"><span class="badge ${cls}">${(p.status || 'pending').toUpperCase()}</span></td>
+          <td data-label="Actions">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              ${p.status !== 'published' ? `<button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓</button>` : ''}
+              <button class="btn btn-danger btn-sm" onclick="deleteAnyPrompt('${p.id}')">Hapus</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  function renderUsersTable(users) {
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = users.map(u => {
+      const cls = u.role === 'developer' ? 'badge-dev' : u.role === 'admin' ? 'badge-admin' : 'badge-user';
+      return `
+        <tr>
+          <td data-label="User">
+            <div style="font-weight:600;color:#fff;">${Ryedz.escapeXml(u.displayName || u.email.split('@')[0])}</div>
+            <div style="font-size:0.75rem;color:#94a3b8;">${Ryedz.escapeXml(u.email)}</div>
+          </td>
+          <td data-label="Role"><span class="badge ${cls}">${(u.role || 'user').toUpperCase()}</span></td>
+          <td data-label="Joined">${u.createdAt ? new Date(u.createdAt.toMillis()).toLocaleDateString() : '-'}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ==========================================
+  // AKSI MODERASI (KE FIREBASE)
+  // ==========================================
+  async function approvePrompt(id) {
+    try {
+      await RyedzFB.approvePrompt(id);
+      Ryedz.showToast('Berhasil di-publish!', 'success');
+    } catch (e) {
+      Ryedz.showToast('Gagal: ' + e.message, 'error');
+    }
+  }
+
+  function openRejectModal(id) {
+    document.getElementById('reject-prompt-id').value = id;
+    document.getElementById('reject-reason').value = '';
+    document.getElementById('reject-modal').classList.add('active');
+  }
+  
+  function closeRejectModal() {
+    document.getElementById('reject-modal').classList.remove('active');
+  }
+
+  async function confirmRejectPrompt() {
+    const id = document.getElementById('reject-prompt-id').value;
+    const reason = document.getElementById('reject-reason').value.trim();
+    if (!reason) { Ryedz.showToast('Alasan wajib diisi!', 'error'); return; }
+    
+    try {
+      await RyedzFB.rejectPrompt(id, reason);
+      closeRejectModal();
+      Ryedz.showToast('Prompt berhasil ditolak.', 'info');
+    } catch (e) {
+      Ryedz.showToast('Gagal: ' + e.message, 'error');
+    }
+  }
+
+  async function deleteAnyPrompt(id) {
+    if (!confirm('Hapus permanen prompt ini?')) return;
+    try {
+      await RyedzFB.db.collection('prompts').doc(id).delete();
+      Ryedz.showToast('Terhapus.', 'info');
+    } catch (e) {
+      Ryedz.showToast('Gagal hapus: ' + e.message, 'error');
+    }
+  }
+
+  // ==========================================
+  // UI HELPERS
+  // ==========================================
   function switchTab(name) {
     document.querySelectorAll('.dev-view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -363,341 +384,11 @@
     document.getElementById('sidebar-overlay').classList.toggle('active');
   }
 
-  function refreshAllData() {
-    const prompts = R.getLocalData('prompts', []);
-    const users = R.getLocalData('users', []);
-    const pending = prompts.filter(p => p.status === 'pending');
-    const published = prompts.filter(p => p.status === 'published');
-    const rejected = prompts.filter(p => p.status === 'rejected');
-    const admins = users.filter(u => u.role === 'admin');
-
-    document.getElementById('stat-users').textContent = users.length;
-    document.getElementById('stat-prompts').textContent = prompts.length;
-    document.getElementById('stat-published').textContent = published.length;
-    document.getElementById('stat-pending').textContent = pending.length;
-    document.getElementById('stat-rejected').textContent = rejected.length;
-    document.getElementById('stat-admins').textContent = admins.length;
-    document.getElementById('badge-pending-count').textContent = pending.length;
-
-    renderQuickPending();
-    renderAllPromptsTable();
-    renderPendingQueue();
-    renderUsersTable();
-    renderAdminsTable();
-    loadAuditLogs();
-    loadMaintenanceSettings();
-    loadContentSettings();
-  }
-
-  function renderQuickPending() {
-    const prompts = R.getLocalData('prompts', []);
-    const pending = prompts.filter(p => p.status === 'pending');
-    const el = document.getElementById('quick-pending-list');
-    if (pending.length === 0) {
-      el.innerHTML = '<div style="color:var(--text-tertiary);font-size:0.85rem;">All clear ✓</div>';
-      return;
-    }
-    el.innerHTML = pending.slice(0, 3).map(p => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--glass-border-light);gap:8px;">
-        <div style="min-width:0;flex:1;">
-          <div style="font-weight:600;color:var(--text-primary);font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${R.escapeXml(p.title)}</div>
-          <div style="font-size:0.72rem;color:var(--text-tertiary);">${R.escapeXml(p.aiModel || 'ChatGPT')}</div>
-        </div>
-        <button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓</button>
-      </div>
-    `).join('');
-  }
-
-  function renderPendingQueue() {
-    const prompts = R.getLocalData('prompts', []);
-    const pending = prompts.filter(p => p.status === 'pending');
-    const container = document.getElementById('pending-queue-container');
-    if (pending.length === 0) {
-      container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;color:var(--text-secondary);">Queue empty! ✓</div>';
-      return;
-    }
-    container.innerHTML = pending.map(p => `
-      <div class="glass" style="padding:20px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
-          <div style="min-width:0;flex:1;">
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
-              <span class="badge badge-amber">PENDING</span>
-              <span class="badge badge-ai">${R.escapeXml(p.aiModel || 'ChatGPT')}</span>
-            </div>
-            <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-primary);margin-bottom:4px;">${R.escapeXml(p.title)}</h3>
-            <div style="font-size:0.78rem;color:var(--text-tertiary);">By ${R.escapeXml(p.ownerEmail || 'User')} • ${R.formatDateTime(p.createdAt)}</div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓ Approve</button>
-            <button class="btn btn-danger btn-sm" onclick="openRejectModal('${p.id}')">✕ Reject</button>
-          </div>
-        </div>
-        <pre style="white-space:pre-wrap;font-family:var(--font-mono);font-size:0.85rem;color:var(--text-primary);line-height:1.5;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:10px;padding:14px;max-height:200px;overflow-y:auto;">${R.escapeXml(p.content)}</pre>
-      </div>
-    `).join('');
-  }
-
-  function approvePrompt(id) {
-    const prompts = R.getLocalData('prompts', []);
-    const p = prompts.find(x => x.id === id);
-    if (!p) return;
-    p.status = 'published';
-    p.publishedAt = Date.now();
-    delete p.moderationReason;
-    R.setLocalData('prompts', prompts);
-    R.addAuditLog('PROMPT_APPROVED', 'Approved "' + p.title + '"', currentUser);
-    R.showToast('Approved & published!', 'success');
-    refreshAllData();
-  }
-
-  function openRejectModal(id) {
-    document.getElementById('reject-prompt-id').value = id;
-    document.getElementById('reject-reason').value = '';
-    document.getElementById('reject-modal').classList.add('active');
-  }
-  function closeRejectModal() {
-    document.getElementById('reject-modal').classList.remove('active');
-  }
-
-  function confirmRejectPrompt() {
-    const id = document.getElementById('reject-prompt-id').value;
-    const reason = document.getElementById('reject-reason').value.trim();
-    if (!reason) { R.showToast('Reason required.', 'error'); return; }
-    const prompts = R.getLocalData('prompts', []);
-    const p = prompts.find(x => x.id === id);
-    if (!p) return;
-    p.status = 'rejected';
-    p.moderationReason = reason;
-    R.setLocalData('prompts', prompts);
-    R.addAuditLog('PROMPT_REJECTED', 'Rejected "' + p.title + '": ' + reason, currentUser);
-    closeRejectModal();
-    R.showToast('Rejected.', 'info');
-    refreshAllData();
-  }
-
-  function renderAllPromptsTable() {
-    const filter = (document.getElementById('filter-prompts-input').value || '').toLowerCase().trim();
-    const ai = document.getElementById('filter-prompts-ai').value || 'all';
-    const prompts = R.getLocalData('prompts', []);
-    const filtered = prompts.filter(p => {
-      const mQ = !filter || ((p.title || '') + ' ' + (p.ownerEmail || '')).toLowerCase().includes(filter);
-      const mAi = ai === 'all' || p.aiModel === ai;
-      return mQ && mAi;
-    });
-    const tbody = document.getElementById('all-prompts-tbody');
-    if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-tertiary);padding:24px;">No prompts.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = filtered.map(p => {
-      const cls = p.status === 'published' ? 'badge-green' : p.status === 'pending' ? 'badge-amber' : 'badge-red';
-      return `
-        <tr>
-          <td data-label="Title"><div style="font-weight:600;color:var(--text-primary);">${R.escapeXml(p.title)}</div></td>
-          <td data-label="AI"><span class="badge badge-ai">${R.escapeXml(p.aiModel || 'ChatGPT')}</span></td>
-          <td data-label="Author">${R.escapeXml(p.ownerEmail || 'User')}</td>
-          <td data-label="Status"><span class="badge ${cls}">${(p.status || 'pending').toUpperCase()}</span></td>
-          <td data-label="Date">${R.formatDate(p.createdAt)}</td>
-          <td data-label="Actions">
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              ${p.status !== 'published' ? `<button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓</button>` : ''}
-              <button class="btn btn-danger btn-sm" onclick="deleteAnyPrompt('${p.id}')">Del</button>
-            </div>
-          </td>
-        </tr>`;
-    }).join('');
-  }
-
-  function deleteAnyPrompt(id) {
-    if (!confirm('Delete permanently?')) return;
-    let prompts = R.getLocalData('prompts', []);
-    const p = prompts.find(x => x.id === id);
-    prompts = prompts.filter(x => x.id !== id);
-    R.setLocalData('prompts', prompts);
-    R.addAuditLog('PROMPT_DELETED', 'Deleted "' + (p ? p.title : id) + '"', currentUser);
-    R.showToast('Deleted.', 'info');
-    refreshAllData();
-  }
-
-  function renderUsersTable() {
-    const users = R.getLocalData('users', []);
-    const tbody = document.getElementById('users-tbody');
-    tbody.innerHTML = users.map(u => {
-      const cls = u.role === 'developer' ? 'badge-dev' : u.role === 'admin' ? 'badge-admin' : 'badge-user';
-      return `
-        <tr>
-          <td data-label="User">
-            <div style="font-weight:600;color:var(--text-primary);">${R.escapeXml(u.displayName || u.email.split('@')[0])}</div>
-            <div style="font-size:0.75rem;color:var(--text-tertiary);">${R.escapeXml(u.email)}</div>
-          </td>
-          <td data-label="Role"><span class="badge ${cls}">${(u.role || 'user').toUpperCase()}</span></td>
-          <td data-label="Joined">${R.formatDate(u.createdAt)}</td>
-          <td data-label="Action">
-            ${u.role !== 'developer' ? `<button class="btn btn-secondary btn-sm" onclick="toggleUserRole('${u.uid}')">Toggle</button>` : '<span style="color:var(--text-tertiary);font-size:0.75rem;">Super Dev</span>'}
-          </td>
-        </tr>`;
-    }).join('');
-  }
-
-  function renderAdminsTable() {
-    const users = R.getLocalData('users', []);
-    const admins = users.filter(u => u.role === 'admin');
-    const tbody = document.getElementById('admins-tbody');
-    if (admins.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-tertiary);padding:20px;">No admins yet.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = admins.map(a => `
-      <tr>
-        <td data-label="Email">${R.escapeXml(a.email)}</td>
-        <td data-label="Name">${R.escapeXml(a.displayName || a.email.split('@')[0])}</td>
-        <td data-label="Actions"><button class="btn btn-danger btn-sm" onclick="demoteAdmin('${a.uid}')">Revoke</button></td>
-      </tr>
-    `).join('');
-  }
-
-  function promoteToAdmin() {
-    const email = document.getElementById('promote-email-input').value.trim();
-    if (!email) return;
-    const users = R.getLocalData('users', []);
-    let u = users.find(x => x.email === email);
-    if (!u) {
-      u = { uid: 'user-' + Date.now(), email, displayName: email.split('@')[0], role: 'admin', createdAt: Date.now() };
-      users.push(u);
-    } else u.role = 'admin';
-    R.setLocalData('users', users);
-    R.addAuditLog('ROLE_PROMOTED', 'Promoted ' + email, currentUser);
-    R.showToast(email + ' is now Admin!', 'success');
-    document.getElementById('promote-email-input').value = '';
-    refreshAllData();
-  }
-
-  function demoteAdmin(uid) {
-    const users = R.getLocalData('users', []);
-    const u = users.find(x => x.uid === uid);
-    if (u) {
-      u.role = 'user';
-      R.setLocalData('users', users);
-      R.addAuditLog('ROLE_DEMOTED', 'Demoted ' + u.email, currentUser);
-      R.showToast('Demoted.', 'info');
-      refreshAllData();
-    }
-  }
-
-  function toggleUserRole(uid) {
-    const users = R.getLocalData('users', []);
-    const u = users.find(x => x.uid === uid);
-    if (u) {
-      u.role = u.role === 'admin' ? 'user' : 'admin';
-      R.setLocalData('users', users);
-      R.addAuditLog('ROLE_CHANGED', 'Toggled ' + u.email + ' to ' + u.role, currentUser);
-      R.showToast('Role: ' + u.role.toUpperCase(), 'success');
-      refreshAllData();
-    }
-  }
-
-  function loadMaintenanceSettings() {
-    const st = R.getLocalData('website_settings', {});
-    const m = st.maintenance || {};
-    document.getElementById('maint-mode-select').value = m.mode || 'NORMAL';
-    document.getElementById('maint-title-input').value = m.title || '';
-    document.getElementById('maint-desc-input').value = m.desc || '';
-    document.getElementById('maint-reason-input').value = m.reason || '';
-    document.getElementById('maint-active-checkbox').checked = !!m.active;
-    const indicator = document.getElementById('maint-indicator');
-    indicator.className = 'status-dot ' + (m.active ? 'inactive' : 'active');
-    if (m.active) indicator.style.background = '#f59e0b';
-  }
-
-  function handleSaveMaintenance(e) {
-    e.preventDefault();
-    const st = R.getLocalData('website_settings', {});
-    st.maintenance = {
-      mode: document.getElementById('maint-mode-select').value,
-      title: document.getElementById('maint-title-input').value.trim(),
-      desc: document.getElementById('maint-desc-input').value.trim(),
-      reason: document.getElementById('maint-reason-input').value.trim(),
-      active: document.getElementById('maint-active-checkbox').checked,
-      updatedAt: Date.now()
-    };
-    R.setLocalData('website_settings', st);
-    R.addAuditLog('MAINTENANCE_TOGGLED', st.maintenance.mode + ' active=' + st.maintenance.active, currentUser);
-    R.showToast('Maintenance saved!', 'success');
-    loadMaintenanceSettings();
-  }
-
-  function loadContentSettings() {
-    const st = R.getLocalData('website_settings', {});
-    document.getElementById('content-hero-title').value = st.heroTitle || '';
-    document.getElementById('content-hero-desc').value = st.heroDesc || '';
-    document.getElementById('content-footer-text').value = st.footerText || '';
-  }
-
-  function handleSaveContent(e) {
-    e.preventDefault();
-    const st = R.getLocalData('website_settings', {});
-    st.heroTitle = document.getElementById('content-hero-title').value.trim();
-    st.heroDesc = document.getElementById('content-hero-desc').value.trim();
-    st.footerText = document.getElementById('content-footer-text').value.trim();
-    R.setLocalData('website_settings', st);
-    R.addAuditLog('CONTENT_UPDATED', 'Updated content', currentUser);
-    R.showToast('Content published!', 'success');
-  }
-
-  function loadAuditLogs() {
-    const logs = R.getLocalData('audit_logs', []);
-    const tbody = document.getElementById('audit-logs-tbody');
-    if (logs.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:20px;">No logs.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = logs.slice(0, 50).map(l => `
-      <tr>
-        <td data-label="Action"><span class="badge badge-purple">${R.escapeXml(l.action)}</span></td>
-        <td data-label="Details">${R.escapeXml(l.details)}</td>
-        <td data-label="Actor">${R.escapeXml(l.actorEmail || 'system')}</td>
-        <td data-label="Time" style="font-size:0.78rem;color:var(--text-tertiary);">${R.formatDateTime(l.timestamp)}</td>
-      </tr>
-    `).join('');
-
-    const quick = document.getElementById('quick-audit-list');
-    quick.innerHTML = logs.slice(0, 3).map(l => `
-      <div style="padding:8px 0;border-bottom:1px solid var(--glass-border-light);font-size:0.85rem;">
-        <div style="font-weight:600;color:var(--text-primary);">${R.escapeXml(l.action)}</div>
-        <div style="color:var(--text-secondary);font-size:0.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${R.escapeXml(l.details)}</div>
-      </div>
-    `).join('') || '<div style="color:var(--text-tertiary);font-size:0.85rem;">No activity yet.</div>';
-  }
-
-  function exportData() {
-    const data = {
-      prompts: R.getLocalData('prompts', []),
-      users: R.getLocalData('users', []),
-      settings: R.getLocalData('website_settings', {}),
-      audit: R.getLocalData('audit_logs', [])
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'ryedz-backup-' + Date.now() + '.json';
-    a.click();
-    R.showToast('Backup downloaded.', 'success');
-  }
-
-  function resetToInitialSeed() {
-    if (!confirm('Reset ALL data?')) return;
-    R.clearAllLocalData();
-    R.ensureSeed();
-    R.showToast('Platform reset. Reloading...', 'info');
-    setTimeout(() => window.location.reload(), 800);
-  }
-
   function handleLogout() {
-    R.logout();
-    window.location.href = 'index.html';
+    RyedzFB.logout().then(() => {
+      window.location.href = 'login.html';
+    });
   }
-
-  document.addEventListener('DOMContentLoaded', initDev);
 </script>
 </body>
-</html>
+  </html>
