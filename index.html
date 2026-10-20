@@ -4,31 +4,23 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#08080c" />
-<title>RYEDZ PROMPT VAULT — Modern AI Prompt Library</title>
-<meta name="description" content="Discover, save, and share powerful AI prompts in one premium workspace." />
+<title>RYEDZ PROMPT VAULT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="glassmorphism.css" />
-<link rel="stylesheet" href="login-ios.css" />
 <style>
-  #featured-prompts-grid,
-  #latest-prompts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-    gap: 16px;
-  }
-  @media (max-width: 640px) {
-    #featured-prompts-grid,
-    #latest-prompts-grid { grid-template-columns: 1fr; }
+  .prompt-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); 
+    gap: 20px; 
+    margin-top: 24px; 
   }
 </style>
 </head>
 <body>
 
-<!-- ============================================================
-     NAVBAR
-     ============================================================ -->
+<!-- NAVBAR -->
 <div class="navbar-wrapper">
   <header class="navbar-container">
     <a href="index.html" class="brand">
@@ -37,635 +29,106 @@
       </div>
       <span>RYEDZ VAULT</span>
     </a>
-
-    <ul class="nav-links">
-      <li><a href="index.html" class="nav-link active">Home</a></li>
-      <li><a href="promt.html" class="nav-link">Explore Vault</a></li>
-      <li id="nav-dashboard-item" style="display:none;">
-        <a href="user.html" class="nav-link" id="nav-dashboard-link">Dashboard</a>
-      </li>
-    </ul>
-
+    
     <div class="nav-actions">
-      <div id="auth-buttons-unlogged" style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-secondary btn-sm" onclick="openAuthModal('login')">Login</button>
-        <button class="btn btn-primary btn-sm" onclick="openAuthModal('register')">Register</button>
+      <!-- Muncul kalau BELUM login -->
+      <div id="btn-login-area">
+        <a href="login.html" class="btn btn-primary">Login / Register</a>
       </div>
-      <div id="auth-buttons-logged" style="display:none;align-items:center;gap:8px;">
-        <a href="user.html" class="btn btn-secondary btn-sm" id="user-badge-name">Dashboard</a>
-        <button class="btn btn-outline btn-sm" onclick="handleLogout()">Logout</button>
+      <!-- Muncul kalau UDAH login -->
+      <div id="btn-dashboard-area" style="display:none;">
+        <a href="#" id="btn-goto-dashboard" class="btn btn-secondary">Dashboard</a>
       </div>
-      <button class="mobile-menu-btn" onclick="toggleMobileDrawer()" aria-label="Menu">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
     </div>
   </header>
 </div>
 
-<!-- Mobile drawer -->
-<div class="mobile-drawer" id="mobile-drawer">
-  <a href="index.html">Home</a>
-  <a href="promt.html">Explore Vault</a>
-  <a href="user.html" id="drawer-dashboard-link" style="display:none;">Dashboard</a>
-</div>
+<!-- HERO SECTION -->
+<section class="hero-section" style="text-align: center; padding-top: 120px;">
+  <h1 class="hero-title" id="hero-title">EXPLORE AI PROMPTS</h1>
+  <p class="hero-description" id="hero-desc">Temukan prompt AI berkualitas tinggi untuk membantu pekerjaan dan kreativitasmu.</p>
+</section>
 
-<!-- ============================================================
-     HERO
-     ============================================================ -->
-<section class="hero-section">
-  <div style="margin-bottom:16px;">
-    <span class="badge badge-purple">Next-Gen AI Prompt Ecosystem</span>
-  </div>
-  <h1 class="hero-title" id="hero-title-text">YOUR AI PROMPT LIBRARY</h1>
-  <p class="hero-description" id="hero-desc-text">
-    Discover, save, and share powerful AI prompts in one premium workspace.
-  </p>
-  <div class="hero-cta">
-    <a href="promt.html" class="btn btn-primary">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-      </svg>
-      Explore Vault
-    </a>
-    <button class="btn btn-secondary" onclick="handleUploadHeroClick()">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-      </svg>
-      Upload Prompt
-    </button>
+<!-- PROMPT GRID -->
+<section class="container" style="padding-bottom: 60px;">
+  <div id="prompt-list" class="prompt-grid">
+    <!-- Loading Skeleton -->
+    <div class="glass-card" style="padding:20px;"><div class="skeleton" style="height:150px; margin-bottom:12px;"></div><div class="skeleton" style="height:20px; width:70%;"></div></div>
+    <div class="glass-card" style="padding:20px;"><div class="skeleton" style="height:150px; margin-bottom:12px;"></div><div class="skeleton" style="height:20px; width:70%;"></div></div>
+    <div class="glass-card" style="padding:20px;"><div class="skeleton" style="height:150px; margin-bottom:12px;"></div><div class="skeleton" style="height:20px; width:70%;"></div></div>
   </div>
 </section>
 
-<!-- ============================================================
-     FEATURED PROMPTS
-     ============================================================ -->
-<section class="section-wrap">
-  <div class="section-header">
-    <div>
-      <h2 class="section-title"><span style="color:#a855f7;">★</span> Featured Prompts</h2>
-      <p class="section-subtitle">Hand-curated, verified high-performance prompts</p>
-    </div>
-    <a href="promt.html" class="btn btn-secondary btn-sm">View All →</a>
-  </div>
-  <div id="featured-prompts-grid"></div>
-</section>
-
-<!-- ============================================================
-     LATEST PROMPTS
-     ============================================================ -->
-<section class="section-wrap">
-  <div class="section-header">
-    <div>
-      <h2 class="section-title"><span style="color:#38bdf8;">⚡</span> Latest Additions</h2>
-      <p class="section-subtitle">Freshly published AI prompts ready to copy</p>
-    </div>
-    <a href="promt.html?sort=latest" class="btn btn-secondary btn-sm">Explore More</a>
-  </div>
-  <div id="latest-prompts-grid"></div>
-</section>
-
-<!-- ============================================================
-     PROMPT DETAIL MODAL
-     ============================================================ -->
-<div class="modal-backdrop" id="prompt-detail-modal">
-  <div class="modal-box" style="max-width:680px;">
-    <div class="modal-header">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <span class="badge badge-purple" id="detail-category-badge">General</span>
-        <span class="badge badge-ai" id="detail-ai-badge">ChatGPT</span>
-      </div>
-      <button class="modal-close" onclick="closeDetailModal()">✕</button>
-    </div>
-
-    <div id="detail-thumb-container" style="width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;margin-bottom:20px;background:#050507;"></div>
-
-    <h3 id="detail-title" style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin-bottom:12px;"></h3>
-
-    <div style="display:flex;align-items:center;gap:12px;font-size:0.85rem;color:var(--text-tertiary);margin-bottom:20px;flex-wrap:wrap;">
-      <span id="detail-author">By Anonymous</span>
-      <span>•</span>
-      <span id="detail-date">Recently</span>
-    </div>
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <span style="font-size:0.8rem;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.05em;">Prompt Text</span>
-      <button class="btn btn-primary btn-sm" onclick="copyDetailPrompt()">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-        </svg>
-        Copy
-      </button>
-    </div>
-    <textarea id="detail-content" readonly class="glass-input" style="height:220px;margin-bottom:16px;"></textarea>
-
-    <div style="display:flex;justify-content:flex-end;gap:10px;">
-      <button class="btn btn-secondary btn-sm" id="detail-fav-btn" onclick="toggleDetailFavorite()">♥ Favorite</button>
-      <button class="btn btn-secondary btn-sm" onclick="closeDetailModal()">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     AUTH MODAL
-     ============================================================ -->
-<div class="modal-backdrop" id="auth-modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3 class="modal-title" id="auth-modal-title">Sign In</h3>
-      <button class="modal-close" onclick="closeAuthModal()">✕</button>
-    </div>
-
-    <div class="tab-pills">
-      <div class="tab-pill active" id="tab-btn-login" onclick="switchAuthTab('login')">Login</div>
-      <div class="tab-pill" id="tab-btn-register" onclick="switchAuthTab('register')">Register</div>
-      <div class="tab-pill" id="tab-btn-reset" onclick="switchAuthTab('reset')">Reset</div>
-    </div>
-
-    <div id="auth-error-box" style="display:none;"></div>
-
-    <form id="auth-form" onsubmit="handleAuthSubmit(event)">
-      <div id="name-input-group" style="margin-bottom:16px;display:none;">
-        <label>Display Name</label>
-        <input type="text" id="auth-name" class="glass-input" placeholder="Alex Ryedz" autocomplete="name" />
-      </div>
-      <div style="margin-bottom:16px;">
-        <label>Email Address</label>
-        <input type="email" id="auth-email" required class="glass-input" placeholder="name@example.com" autocomplete="email" />
-      </div>
-      <div id="password-input-group" style="margin-bottom:20px;">
-        <label>Password</label>
-        <input type="password" id="auth-password" class="glass-input" placeholder="Min 6 characters" minlength="6" autocomplete="current-password" />
-      </div>
-      <button type="submit" id="auth-submit-btn">Sign In</button>
-    </form>
-
-    <div class="auth-footer-text">
-      Protected by Firebase Authentication & RYEDZ Security.
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     MAINTENANCE OVERLAY
-     ============================================================ -->
-<div id="maintenance-banner-view">
-  <div class="glass" style="max-width:560px;padding:40px;border-radius:24px;text-align:center;">
-    <div style="width:64px;height:64px;border-radius:18px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:#fcd34d;font-size:2rem;">🛠</div>
-    <h2 id="maint-title" style="font-size:1.5rem;font-weight:800;color:var(--text-primary);margin-bottom:12px;"></h2>
-    <p id="maint-desc" style="color:var(--text-secondary);font-size:0.95rem;margin-bottom:18px;line-height:1.6;"></p>
-    <div id="maint-reason-box" style="padding:10px;background:var(--surface-1);border-radius:10px;font-size:0.85rem;color:var(--text-tertiary);margin-bottom:24px;"></div>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <button class="btn btn-secondary btn-sm" onclick="window.location.reload()">Coba Lagi</button>
-      <a href="develover.html" class="btn btn-outline btn-sm">Dev Bypass</a>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     FOOTER
-     ============================================================ -->
-<footer>
-  <div class="footer-content">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div class="brand-icon" style="width:28px;height:28px;">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg>
-      </div>
-      <span style="font-weight:700;font-size:0.9rem;">RYEDZ PROMPT VAULT</span>
-    </div>
-    <div style="color:var(--text-tertiary);font-size:0.85rem;" id="footer-copy">© 2026 RYEDZ PROMPT VAULT.</div>
-    <div style="display:flex;gap:16px;font-size:0.85rem;">
-      <a href="index.html" style="color:var(--text-secondary);">Home</a>
-      <a href="promt.html" style="color:var(--text-secondary);">Explore</a>
-    </div>
-  </div>
-</footer>
-
-<!-- ============================================================
-     SCRIPTS — URUTAN WAJIB
-     ============================================================ -->
-
-<!-- 1. Firebase SDK -->
+<!-- FIREBASE SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
 
-<!-- 2. Firebase config & init -->
+<!-- CORE & CONFIG -->
 <script src="firebase-config.js"></script>
 <script src="firebase-init.js"></script>
-
-<!-- 3. Core utilities -->
 <script src="ryedz-core.js"></script>
 
-<!-- 4. Page script -->
 <script>
-'use strict';
+  'use strict';
 
-// ============================================================
-// GUARD: pastikan semua libs sudah ke-load
-// ============================================================
-(function () {
-  const errors = [];
-  if (typeof window.firebase === 'undefined') errors.push('Firebase SDK');
-  if (typeof window.RyedzFirebase === 'undefined') errors.push('firebase-config.js');
-  if (typeof window.RyedzFB === 'undefined') errors.push('firebase-init.js');
-  if (typeof window.Ryedz === 'undefined') errors.push('ryedz-core.js');
-
-  if (errors.length > 0) {
-    document.body.innerHTML =
-      '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:sans-serif;background:#08080c;color:#fff;">' +
-        '<div style="max-width:480px;padding:32px;background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);border-radius:16px;text-align:center;">' +
-          '<div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>' +
-          '<h2 style="margin-bottom:12px;">File Tidak Ditemukan</h2>' +
-          '<p style="color:#94a3b8;margin-bottom:16px;">File berikut gagal di-load:</p>' +
-          '<ul style="text-align:left;color:#fda4af;list-style:none;padding:0;margin-bottom:20px;">' +
-            errors.map(function (e) { return '<li>❌ ' + e + '</li>'; }).join('') +
-          '</ul>' +
-          '<p style="color:#94a3b8;font-size:0.85rem;">Pastikan semua file ada di folder yang sama dengan index.html.</p>' +
-        '</div>' +
-      '</div>';
-    console.error('Missing files:', errors);
-    return;
-  }
-})();
-
-const R = window.Ryedz;
-const FB = window.RyedzFB;
-
-// ============================================================
-// STATE
-// ============================================================
-let currentUser = null;
-let currentUserRole = 'user';
-let allPublishedPrompts = [];
-let activeDetailPrompt = null;
-let currentAuthTab = 'login';
-
-// ============================================================
-// AUTH — MODAL
-// ============================================================
-function openAuthModal(tab) {
-  switchAuthTab(tab || 'login');
-  document.getElementById('auth-modal').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeAuthModal() {
-  document.getElementById('auth-modal').classList.remove('active');
-  document.body.style.overflow = '';
-  const errBox = document.getElementById('auth-error-box');
-  if (errBox) errBox.style.display = 'none';
-}
-
-function switchAuthTab(tab) {
-  currentAuthTab = tab;
-  ['login', 'register', 'reset'].forEach(function (t) {
-    const el = document.getElementById('tab-btn-' + t);
-    if (el) el.classList.toggle('active', t === tab);
+  // 1. CEK STATUS LOGIN (Untuk Tombol Dashboard)
+  RyedzFB.onAuthChange((user, profile) => {
+    if (user) {
+      document.getElementById('btn-login-area').style.display = 'none';
+      document.getElementById('btn-dashboard-area').style.display = 'block';
+      
+      let role = profile.role || 'user';
+      // Arahkan ke halaman yang tepat
+      let dashUrl = role === 'developer' ? 'develover.html' : 'user.html';
+      document.getElementById('btn-goto-dashboard').href = dashUrl;
+    } else {
+      document.getElementById('btn-login-area').style.display = 'block';
+      document.getElementById('btn-dashboard-area').style.display = 'none';
+    }
   });
 
-  const title = document.getElementById('auth-modal-title');
-  const submit = document.getElementById('auth-submit-btn');
-  const nameGroup = document.getElementById('name-input-group');
-  const passGroup = document.getElementById('password-input-group');
-
-  if (tab === 'login') {
-    title.textContent = 'Welcome Back';
-    submit.textContent = 'Sign In';
-    nameGroup.style.display = 'none';
-    passGroup.style.display = 'block';
-  } else if (tab === 'register') {
-    title.textContent = 'Create Free Account';
-    submit.textContent = 'Register Account';
-    nameGroup.style.display = 'block';
-    passGroup.style.display = 'block';
-  } else {
-    title.textContent = 'Reset Password';
-    submit.textContent = 'Send Reset Email';
-    nameGroup.style.display = 'none';
-    passGroup.style.display = 'none';
-  }
-}
-
-async function handleAuthSubmit(e) {
-  e.preventDefault();
-
-  const email = document.getElementById('auth-email').value.trim();
-  const password = document.getElementById('auth-password').value;
-  const displayName = document.getElementById('auth-name').value.trim();
-  const errBox = document.getElementById('auth-error-box');
-  const btn = document.getElementById('auth-submit-btn');
-
-  errBox.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Processing...';
-
-  try {
-    if (currentAuthTab === 'register') {
-      const result = await FB.register(email, password, displayName);
-      R.showToast('Akun dibuat! Redirect...', 'success');
-      closeAuthModal();
-      setTimeout(function () {
-        window.location.href = R.getRedirectForRole(result.role);
-      }, 700);
-
-    } else if (currentAuthTab === 'login') {
-      await FB.login(email, password);
-      R.showToast('Login berhasil!', 'success');
-      closeAuthModal();
-      // redirect akan otomatis dari onAuthChange
-
-    } else {
-      await FB.sendPasswordReset(email);
-      R.showToast('Email reset terkirim. Cek inbox.', 'info');
-      closeAuthModal();
-    }
-  } catch (err) {
-    console.error('[Auth Error]', err);
-    const msg = (err.message || 'Unknown error')
-      .replace('Firebase: ', '')
-      .replace(/\(auth\/.*\)\.?/, '')
-      .trim();
-    errBox.textContent = msg || 'Terjadi kesalahan. Coba lagi.';
-    errBox.style.display = 'block';
-  } finally {
-    btn.disabled = false;
-    switchAuthTab(currentAuthTab);
-  }
-}
-
-// ============================================================
-// UI UPDATE
-// ============================================================
-function updateAuthUI(isLoggedIn) {
-  const unlogged = document.getElementById('auth-buttons-unlogged');
-  const logged = document.getElementById('auth-buttons-logged');
-  const badge = document.getElementById('user-badge-name');
-  const navItem = document.getElementById('nav-dashboard-item');
-  const navLink = document.getElementById('nav-dashboard-link');
-  const drawerLink = document.getElementById('drawer-dashboard-link');
-
-  if (isLoggedIn && currentUser) {
-    if (unlogged) unlogged.style.display = 'none';
-    if (logged) logged.style.display = 'inline-flex';
-
-    const name = currentUser.displayName || currentUser.email.split('@')[0];
-    const target = R.getRedirectForRole(currentUserRole);
-    const label = currentUserRole === 'developer' ? 'Developer Center'
-                : currentUserRole === 'admin' ? 'Admin Panel'
-                : 'Dashboard';
-
-    if (badge) { badge.textContent = name; badge.href = target; }
-    if (navItem) navItem.style.display = 'inline-block';
-    if (navLink) { navLink.href = target; navLink.textContent = label; }
-    if (drawerLink) { drawerLink.style.display = 'block'; drawerLink.href = target; drawerLink.textContent = label; }
-  } else {
-    if (unlogged) unlogged.style.display = 'inline-flex';
-    if (logged) logged.style.display = 'none';
-    if (navItem) navItem.style.display = 'none';
-    if (drawerLink) drawerLink.style.display = 'none';
-  }
-}
-
-async function handleLogout() {
-  try { await FB.logout(); } catch (e) {}
-  currentUser = null;
-  currentUserRole = 'user';
-  updateAuthUI(false);
-  R.showToast('Logout berhasil.', 'info');
-}
-
-function handleUploadHeroClick() {
-  if (!currentUser) {
-    openAuthModal('login');
-    R.showToast('Login dulu untuk upload.', 'info');
-  } else {
-    window.location.href = 'user.html#upload';
-  }
-}
-
-function toggleMobileDrawer() {
-  document.getElementById('mobile-drawer').classList.toggle('active');
-}
-
-// ============================================================
-// LOAD PROMPTS
-// ============================================================
-function loadPrompts() {
-  const featGrid = document.getElementById('featured-prompts-grid');
-  const lateGrid = document.getElementById('latest-prompts-grid');
-
-  // Skeleton
-  const skel = '<div class="glass-card" style="padding:0;">' +
-    '<div class="skeleton" style="width:100%;aspect-ratio:16/9;"></div>' +
-    '<div style="padding:16px;">' +
-      '<div class="skeleton" style="width:70%;height:22px;margin-bottom:8px;"></div>' +
-      '<div class="skeleton" style="width:90%;height:14px;"></div>' +
-    '</div></div>';
-  featGrid.innerHTML = skel + skel + skel;
-  lateGrid.innerHTML = skel + skel + skel;
-
-  FB.listenPublishedPrompts(function (prompts) {
-    allPublishedPrompts = prompts;
-
+  // 2. AMBIL DATA PROMPT DARI FIREBASE (REAL-TIME)
+  RyedzFB.listenPublishedPrompts((prompts) => {
+    const list = document.getElementById('prompt-list');
+    
+    // Kalau kosong
     if (prompts.length === 0) {
-      featGrid.innerHTML =
-        '<div class="glass" style="grid-column:1/-1;padding:48px 24px;text-align:center;">' +
-          '<div style="font-size:2rem;margin-bottom:12px;">📭</div>' +
-          '<h3 style="color:var(--text-primary);margin-bottom:8px;">Belum ada prompt</h3>' +
-          '<p style="color:var(--text-secondary);margin-bottom:20px;">Jadilah yang pertama upload!</p>' +
-          '<button class="btn btn-primary btn-sm" onclick="handleUploadHeroClick()">Upload Now</button>' +
-        '</div>';
-      lateGrid.innerHTML = '';
+      list.innerHTML = `
+        <div class="glass" style="grid-column: 1/-1; text-align:center; padding:40px; color:#94a3b8;">
+          <div style="font-size:2rem; margin-bottom:12px;">📭</div>
+          <h3 style="color:#fff; margin-bottom:8px;">Belum Ada Prompt</h3>
+          <p>Jadilah yang pertama untuk mengupload prompt!</p>
+        </div>
+      `;
       return;
     }
 
-    let featured = prompts.filter(function (p) { return p.isFeatured; }).slice(0, 3);
-    if (featured.length === 0) featured = prompts.slice(0, 3);
-    featGrid.innerHTML = featured.map(createCardHTML).join('');
-
-    const latest = prompts.slice().sort(function (a, b) {
-      const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
-      const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
-      return tb - ta;
-    }).slice(0, 6);
-    lateGrid.innerHTML = latest.map(createCardHTML).join('');
+    // Render kartu prompt
+    list.innerHTML = prompts.map(p => `
+      <div class="glass-card" style="border-radius:16px; overflow:hidden; display:flex; flex-direction:column;">
+        <!-- Thumbnail SVG Deterministik -->
+        <img src="${Ryedz.generateThumbnail(p.id, p.title, p.aiModel)}" style="width:100%; display:block;" alt="${Ryedz.escapeXml(p.title)}">
+        
+        <div style="padding: 16px; flex:1; display:flex; flex-direction:column;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span class="badge badge-blue">${Ryedz.escapeXml(p.aiModel || 'ChatGPT')}</span>
+            <span class="badge badge-purple">${Ryedz.escapeXml(p.category || 'General')}</span>
+          </div>
+          
+          <h3 style="margin-bottom:8px; color:#fff; font-size:1.1rem; font-weight:700;">${Ryedz.escapeXml(p.title)}</h3>
+          
+          <p style="color:#94a3b8; font-size:0.85rem; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:16px; flex:1;">
+            ${Ryedz.escapeXml(p.content)}
+          </p>
+          
+          <div style="font-size:0.75rem; color:#64748b; border-top:1px solid rgba(255,255,255,0.05); padding-top:12px;">
+            By ${Ryedz.escapeXml((p.ownerEmail || 'creator').split('@')[0])}
+          </div>
+        </div>
+      </div>
+    `).join('');
   });
-}
-
-function createCardHTML(p) {
-  const thumb = R.generateThumbnail(p.id, p.title, p.aiModel);
-  return '<div class="glass-card">' +
-    '<div class="card-thumb"><img src="' + thumb + '" alt="' + R.escapeXml(p.title) + '" loading="lazy" /></div>' +
-    '<div class="card-body">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;gap:6px;">' +
-        '<span class="badge badge-purple" style="max-width:50%;overflow:hidden;text-overflow:ellipsis;">' + R.escapeXml(p.category || 'General') + '</span>' +
-        '<span class="badge badge-blue" style="max-width:50%;overflow:hidden;text-overflow:ellipsis;">' + R.escapeXml(p.aiModel || 'ChatGPT') + '</span>' +
-      '</div>' +
-      '<h3 class="card-title">' + R.escapeXml(p.title) + '</h3>' +
-      '<div class="card-meta">' +
-        '<span>By ' + R.escapeXml((p.ownerEmail || 'creator').split('@')[0]) + '</span>' +
-      '</div>' +
-      '<div class="card-actions">' +
-        '<button class="btn btn-primary btn-sm" style="flex:1;" onclick="openPromptDetail(\'' + p.id + '\')">Open</button>' +
-        '<button class="btn btn-secondary btn-sm" onclick="quickCopyPrompt(\'' + p.id + '\')">Copy</button>' +
-      '</div>' +
-    '</div>' +
-  '</div>';
-}
-
-// ============================================================
-// DETAIL MODAL
-// ============================================================
-async function openPromptDetail(id) {
-  const p = allPublishedPrompts.find(function (x) { return x.id === id; });
-  if (!p) return;
-
-  activeDetailPrompt = p;
-
-  document.getElementById('detail-title').textContent = p.title;
-  document.getElementById('detail-content').value = p.content;
-  document.getElementById('detail-category-badge').textContent = p.category || 'General';
-  document.getElementById('detail-ai-badge').textContent = p.aiModel || 'ChatGPT';
-  document.getElementById('detail-author').textContent = 'By ' + (p.ownerEmail ? p.ownerEmail.split('@')[0] : 'Anonymous');
-  document.getElementById('detail-date').textContent = R.formatDate(p.createdAt);
-  document.getElementById('detail-thumb-container').innerHTML =
-    '<img src="' + R.generateThumbnail(p.id, p.title, p.aiModel) + '" style="width:100%;height:100%;object-fit:cover;" />';
-
-  const favBtn = document.getElementById('detail-fav-btn');
-  if (currentUser) {
-    try {
-      const isFav = await FB.isFavorite(currentUser.uid, p.id);
-      favBtn.textContent = isFav ? '♥ Remove Favorite' : '♥ Favorite';
-    } catch {
-      favBtn.textContent = '♥ Favorite';
-    }
-  } else {
-    favBtn.textContent = '♥ Favorite';
-  }
-
-  document.getElementById('prompt-detail-modal').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeDetailModal() {
-  document.getElementById('prompt-detail-modal').classList.remove('active');
-  document.body.style.overflow = '';
-  activeDetailPrompt = null;
-}
-
-async function copyDetailPrompt() {
-  if (!activeDetailPrompt) return;
-  const ok = await R.copyText(activeDetailPrompt.content);
-  if (ok) FB.incrementCopiedCount(activeDetailPrompt.id);
-  R.showToast(ok ? 'Prompt copied!' : 'Gagal copy.', ok ? 'success' : 'error');
-}
-
-async function quickCopyPrompt(id) {
-  const p = allPublishedPrompts.find(function (x) { return x.id === id; });
-  if (!p) return;
-  const ok = await R.copyText(p.content);
-  if (ok) FB.incrementCopiedCount(id);
-  R.showToast(ok ? 'Prompt copied!' : 'Gagal copy.', ok ? 'success' : 'error');
-}
-
-async function toggleDetailFavorite() {
-  if (!currentUser) {
-    closeDetailModal();
-    openAuthModal('login');
-    R.showToast('Login dulu untuk favorite.', 'warning');
-    return;
-  }
-  if (!activeDetailPrompt) return;
-
-  try {
-    const isFav = await FB.isFavorite(currentUser.uid, activeDetailPrompt.id);
-    if (isFav) {
-      await FB.removeFavorite(currentUser.uid, activeDetailPrompt.id);
-      document.getElementById('detail-fav-btn').textContent = '♥ Favorite';
-      R.showToast('Dihapus dari favorit.', 'info');
-    } else {
-      await FB.addFavorite(currentUser.uid, activeDetailPrompt);
-      document.getElementById('detail-fav-btn').textContent = '♥ Remove Favorite';
-      R.showToast('Ditambahkan ke favorit!', 'success');
-    }
-  } catch (err) {
-    console.error(err);
-    R.showToast('Gagal: ' + err.message, 'error');
-  }
-}
-
-// ============================================================
-// EXPOSE FUNCTIONS KE GLOBAL (untuk onclick di HTML)
-// ============================================================
-window.openAuthModal = openAuthModal;
-window.closeAuthModal = closeAuthModal;
-window.switchAuthTab = switchAuthTab;
-window.handleAuthSubmit = handleAuthSubmit;
-window.handleLogout = handleLogout;
-window.handleUploadHeroClick = handleUploadHeroClick;
-window.toggleMobileDrawer = toggleMobileDrawer;
-window.openPromptDetail = openPromptDetail;
-window.closeDetailModal = closeDetailModal;
-window.copyDetailPrompt = copyDetailPrompt;
-window.quickCopyPrompt = quickCopyPrompt;
-window.toggleDetailFavorite = toggleDetailFavorite;
-
-// ============================================================
-// BOOTSTRAP
-// ============================================================
-document.addEventListener('DOMContentLoaded', function () {
-
-  // Auth state listener
-  FB.onAuthChange(function (user, profile) {
-    if (user && profile) {
-      currentUser = Object.assign({ uid: user.uid, email: user.email }, profile);
-      currentUserRole = profile.role || 'user';
-      updateAuthUI(true);
-    } else {
-      currentUser = null;
-      currentUserRole = 'user';
-      updateAuthUI(false);
-    }
-  });
-
-  // Load hero text dari settings
-  R.getLocalData('website_settings', function () {});
-  const settings = R.getLocalData('website_settings', {});
-  const heroTitle = document.getElementById('hero-title-text');
-  const heroDesc = document.getElementById('hero-desc-text');
-  const footerCopy = document.getElementById('footer-copy');
-  if (settings.heroTitle && heroTitle) heroTitle.textContent = settings.heroTitle;
-  if (settings.heroDesc && heroDesc) heroDesc.textContent = settings.heroDesc;
-  if (settings.footerText && footerCopy) footerCopy.textContent = settings.footerText;
-
-  // Load prompts
-  loadPrompts();
-
-  // Maintenance check
-  R.checkMaintenance();
-
-  // ESC close modal
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-backdrop.active').forEach(function (m) {
-        m.classList.remove('active');
-      });
-      document.body.style.overflow = '';
-    }
-  });
-
-  // Click backdrop close
-  document.querySelectorAll('.modal-backdrop').forEach(function (bd) {
-    bd.addEventListener('click', function (e) {
-      if (e.target === bd) {
-        bd.classList.remove('active');
-        document.body.style.overflow = '';
-      }
-    });
-  });
-});
 </script>
 </body>
-  </html>
+</html>
