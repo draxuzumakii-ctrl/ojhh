@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — RYEDZ PROMPT VAULT</title>
+  <meta name="description" content="Admin prompt workspace. Authorized to create, edit, search, and manage verified admin prompts." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Firebase Web SDK Compat (CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-base: #06070a;
+      --bg-surface: rgba(13, 15, 23, 0.75);
+      --bg-surface-elevated: rgba(20, 24, 38, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --accent-blue: #38bdf8;
+      --accent-blue-glow: rgba(56, 189, 248, 0.25);
+      --accent-purple: #8b5cf6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --danger: #f43f5e;
+      --success: #10b981;
+      --warning: #f59e0b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 45%);
+      background-attachment: fixed;
+    }
+
+    .dashboard-layout { display: flex; width: 100%; min-height: 100vh; position: relative; }
+
+    /* Admin Glass Sidebar */
+    .sidebar {
+      width: 270px;
+      background: rgba(10, 12, 18, 0.92);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      border-right: 1px solid var(--border-subtle);
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; bottom: 0; left: 0;
+      z-index: 100;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+    }
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+    .brand-icon svg { width: 18px; height: 18px; fill: #ffffff; }
+
+    .nav-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .nav-item:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .nav-item.active {
+      color: #ffffff;
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.2), rgba(56, 189, 248, 0.04));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      box-shadow: 0 4px 15px -3px rgba(56, 189, 248, 0.3);
+    }
+
+    .sidebar-user {
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .avatar-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #38bdf8, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Mobile Top Header */
+    .mobile-top-bar {
+      display: none;
+      width: 100%;
+      height: 60px;
+      background: rgba(10, 12, 18, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0 18px;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      z-index: 95;
+    }
+    .sidebar-overlay.active { display: block; }
+
+    /* Main Content */
+    .main-wrapper {
+      margin-left: 270px;
+      flex: 1;
+      padding: 28px 36px 60px;
+      max-width: 1300px;
+      min-width: 0;
+      width: calc(100% - 270px);
+    }
+
+    .top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .page-title { font-size: 1.75rem; font-weight: 800; color: #ffffff; }
+    .page-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 2px; }
+
+    /* Super Glassmorphism Utility */
+    .glass {
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+    }
+    .glass-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%), var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      transition: all 0.2s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.6);
+    }
+    .glass-input {
+      width: 100%;
+      background: rgba(10, 12, 18, 0.7);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 11px 15px;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .glass-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px var(--accent-blue-glow);
+    }
+    select.glass-input option {
+      background: #0f121d;
+      color: #fff;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 9px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 18px rgba(37, 99, 235, 0.35);
+    }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+    .btn-danger:hover { background: rgba(244, 63, 94, 0.25); }
+    .btn-sm { padding: 6px 14px; font-size: 0.82rem; border-radius: 9px; }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-admin {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .badge-pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .badge-published {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .badge-ai {
+      background: rgba(139, 92, 246, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .dashboard-view { display: none; }
+    .dashboard-view.active { display: block; animation: fadeIn 0.25s ease; }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .stat-card { padding: 22px; }
+    .stat-value { font-size: 2.2rem; font-weight: 800; color: #fff; margin-top: 4px; }
+
+    .prompts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 20px;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(14px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000; padding: 16px;
+    }
+    .modal-backdrop.active { display: flex; }
+    .modal-box { width: 100%; max-width: 650px; padding: 28px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+
+    /* Toast */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      z-index: 9999; display: flex; flex-direction: column; gap: 10px;
+    }
+    .toast {
+      padding: 12px 18px; border-radius: 12px;
+      background: rgba(18, 20, 32, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff; font-size: 0.9rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 860px) {
+      .mobile-top-bar { display: flex; }
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .main-wrapper {
+        margin-left: 0;
+        width: 100%;
+        padding: 20px 16px 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile Top Bar with Hamburger -->
+  <div class="mobile-top-bar">
+    <a href="index.html" class="brand" style="margin-bottom:0;">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg>
+      </div>
+      <span>RYEDZ ADMIN</span>
+    </a>
+    <button class="btn btn-secondary btn-sm" onclick="toggleSidebar()">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="sidebar" id="admin-sidebar">
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg>
+        </div>
+        <span>RYEDZ ADMIN</span>
+      </a>
+
+      <ul class="nav-menu">
+        <li>
+          <div class="nav-item active" onclick="switchNav('overview')" id="nav-btn-overview">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+            <span>Overview</span>
+          </div>
+        </li>
+        <li>
+          <div class="nav-item" onclick="switchNav('upload')" id="nav-btn-upload">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span>Upload Prompt</span>
+          </div>
+        </li>
+        <li>
+          <div class="nav-item" onclick="switchNav('myprompts')" id="nav-btn-myprompts">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            <span>My Prompts</span>
+          </div>
+        </li>
+        <li>
+          <div class="nav-item" onclick="switchNav('search')" id="nav-btn-search">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span>Search Prompts</span>
+          </div>
+        </li>
+        <li>
+          <div class="nav-item" onclick="switchNav('profile')" id="nav-btn-profile">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span>Profile</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="sidebar-user">
+        <div class="avatar-circle" id="admin-avatar">A</div>
+        <div style="flex:1; overflow:hidden;">
+          <div style="font-size:0.88rem; font-weight:700; color:#fff; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;" id="admin-name">Admin</div>
+          <div style="font-size:0.7rem; color:#38bdf8; font-weight:700;">VERIFIED ADMIN</div>
+        </div>
+        <button onclick="handleLogout()" class="btn btn-secondary btn-sm" style="padding:6px;" title="Logout">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      
+      <!-- 1. OVERVIEW -->
+      <section class="dashboard-view active" id="view-overview">
+        <div class="top-header">
+          <div>
+            <h1 class="page-title">Admin Dashboard</h1>
+            <p class="page-subtitle">Manage your verified prompts and inspect publication status.</p>
+          </div>
+          <button class="btn btn-primary" onclick="switchNav('upload')">+ Upload Prompt</button>
+        </div>
+
+        <div class="stats-row">
+          <div class="glass glass-card stat-card">
+            <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">MY TOTAL PROMPTS</div>
+            <div class="stat-value" id="stat-total-prompts">0</div>
+          </div>
+          <div class="glass glass-card stat-card">
+            <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">PUBLISHED LIVE</div>
+            <div class="stat-value" style="color:#34d399;" id="stat-published-prompts">0</div>
+          </div>
+          <div class="glass glass-card stat-card">
+            <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">PENDING REVIEW</div>
+            <div class="stat-value" style="color:#fbbf24;" id="stat-pending-prompts">0</div>
+          </div>
+        </div>
+
+        <div class="glass" style="padding:24px; margin-top:20px;">
+          <h2 style="font-size:1.15rem; font-weight:700; color:#fff; margin-bottom:14px;">Recent Submissions</h2>
+          <div id="admin-recent-list"></div>
+        </div>
+      </section>
+
+      <!-- 2. UPLOAD PROMPT (WITH 25 AI MODELS) -->
+      <section class="dashboard-view" id="view-upload">
+        <div class="top-header">
+          <div>
+            <h1 class="page-title">Upload Prompt</h1>
+            <p class="page-subtitle">Submit verified prompts with selected AI model and automatic deterministic SVG thumbnail.</p>
+          </div>
+        </div>
+
+        <div class="glass" style="max-width:840px; padding:32px;">
+          <form onsubmit="handleAdminUpload(event)">
+            <!-- A. JUDUL PROMPT -->
+            <div style="margin-bottom:20px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <label style="font-weight:700; font-size:0.9rem; color:#fff;">A. JUDUL PROMPT <span style="color:var(--danger)">*</span></label>
+                <span style="font-size:0.75rem; color:var(--text-subtle);" id="admin-title-count">0 / 120</span>
+              </div>
+              <input type="text" id="admin-prompt-title" required maxlength="120" class="glass-input" placeholder="Contoh: Production-Ready Microservices Architecture" oninput="updateAdminThumb()" />
+            </div>
+
+            <!-- B. ISI PROMPT -->
+            <div style="margin-bottom:20px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <label style="font-weight:700; font-size:0.9rem; color:#fff;">B. ISI PROMPT <span style="color:var(--danger)">*</span></label>
+                <span style="font-size:0.75rem; color:var(--text-subtle);">Max 15,000 chars</span>
+              </div>
+              <textarea id="admin-prompt-content" required maxlength="15000" class="glass-input" style="height:200px; font-family:'JetBrains Mono', monospace; font-size:0.88rem; line-height:1.5;" placeholder="Contoh: Provide a complete architecture diagram, Docker Compose setup, and health checks..."></textarea>
+            </div>
+
+            <!-- C. PILIHAN JENIS AI (25 Model) -->
+            <div style="margin-bottom:24px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <label style="font-weight:700; font-size:0.9rem; color:#fff;">C. PILIHAN JENIS AI <span style="color:var(--accent-blue)">*</span></label>
+                <span style="font-size:0.75rem; color:var(--text-subtle);">25 Model AI Tersedia</span>
+              </div>
+              <select id="admin-prompt-ai" class="glass-input" style="font-weight:600;" onchange="updateAdminThumb()">
+                <option value="ChatGPT">1. ChatGPT (OpenAI)</option>
+                <option value="Google Gemini">2. Google Gemini</option>
+                <option value="Claude">3. Claude (Anthropic)</option>
+                <option value="DeepSeek">4. DeepSeek</option>
+                <option value="Microsoft Copilot">5. Microsoft Copilot</option>
+                <option value="Meta AI">6. Meta AI</option>
+                <option value="Grok">7. Grok (xAI)</option>
+                <option value="Perplexity AI">8. Perplexity AI</option>
+                <option value="Mistral AI">9. Mistral AI</option>
+                <option value="Qwen AI">10. Qwen AI</option>
+                <option value="Kimi AI">11. Kimi AI</option>
+                <option value="Character.AI">12. Character.AI</option>
+                <option value="Poe AI">13. Poe AI</option>
+                <option value="HuggingChat">14. HuggingChat</option>
+                <option value="Pi AI">15. Pi AI</option>
+                <option value="Le Chat">16. Le Chat</option>
+                <option value="Amazon Q">17. Amazon Q</option>
+                <option value="GitHub Copilot">18. GitHub Copilot</option>
+                <option value="Phind AI">19. Phind AI</option>
+                <option value="You.com AI">20. You.com AI</option>
+                <option value="Z.ai">21. Z.ai</option>
+                <option value="ERNIE Bot">22. ERNIE Bot</option>
+                <option value="Doubao AI">23. Doubao AI</option>
+                <option value="Tencent Yuanbao">24. Tencent Yuanbao</option>
+                <option value="AI Studio">25. AI Studio</option>
+              </select>
+            </div>
+
+            <!-- Auto Thumbnail Preview -->
+            <div style="margin-bottom:24px; padding:18px; background:rgba(10,12,18,0.6); border:1px solid var(--border-subtle); border-radius:14px;">
+              <div style="font-size:0.82rem; font-weight:700; color:var(--text-muted); margin-bottom:10px;">Deterministic 16:9 Thumbnail Preview</div>
+              <div id="admin-thumb-preview" style="max-width:420px; aspect-ratio:16/9; border-radius:12px; overflow:hidden; border:1px solid var(--border-subtle);"></div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:12px;">
+              <button type="button" class="btn btn-secondary" onclick="switchNav('myprompts')">Cancel</button>
+              <button type="submit" class="btn btn-primary" id="admin-submit-btn">Submit for Moderation</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- 3. MY PROMPTS -->
+      <section class="dashboard-view" id="view-myprompts">
+        <div class="top-header">
+          <div>
+            <h1 class="page-title">My Admin Prompts</h1>
+            <p class="page-subtitle">Prompts authored under your verified Admin account.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="switchNav('upload')">+ New Prompt</button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+          <select id="filter-myprompt-status" class="glass-input" style="max-width:180px;" onchange="loadAdminData()">
+            <option value="all">Semua Status</option>
+            <option value="published">Published</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select id="filter-myprompt-ai" class="glass-input" style="max-width:220px;" onchange="loadAdminData()">
+            <option value="all">Semua Jenis AI (25)</option>
+            <option value="ChatGPT">ChatGPT</option>
+            <option value="Google Gemini">Google Gemini</option>
+            <option value="Claude">Claude</option>
+            <option value="DeepSeek">DeepSeek</option>
+            <option value="Microsoft Copilot">Microsoft Copilot</option>
+            <option value="Meta AI">Meta AI</option>
+            <option value="Grok">Grok</option>
+            <option value="Perplexity AI">Perplexity AI</option>
+            <option value="Mistral AI">Mistral AI</option>
+            <option value="Qwen AI">Qwen AI</option>
+            <option value="Kimi AI">Kimi AI</option>
+            <option value="Character.AI">Character.AI</option>
+            <option value="Poe AI">Poe AI</option>
+            <option value="HuggingChat">HuggingChat</option>
+            <option value="Pi AI">Pi AI</option>
+            <option value="Le Chat">Le Chat</option>
+            <option value="Amazon Q">Amazon Q</option>
+            <option value="GitHub Copilot">GitHub Copilot</option>
+            <option value="Phind AI">Phind AI</option>
+            <option value="You.com AI">You.com AI</option>
+            <option value="Z.ai">Z.ai</option>
+            <option value="ERNIE Bot">ERNIE Bot</option>
+            <option value="Doubao AI">Doubao AI</option>
+            <option value="Tencent Yuanbao">Tencent Yuanbao</option>
+            <option value="AI Studio">AI Studio</option>
+          </select>
+        </div>
+
+        <div class="prompts-grid" id="admin-myprompts-grid"></div>
+      </section>
+
+      <!-- 4. SEARCH PROMPTS -->
+      <section class="dashboard-view" id="view-search">
+        <div class="top-header">
+          <div>
+            <h1 class="page-title">Search Prompt Vault</h1>
+            <p class="page-subtitle">Search through public prompts filtered by keywords and 25 AI model types.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; max-width:800px;">
+          <input type="text" id="admin-search-input" class="glass-input" style="flex:1; min-width:260px;" placeholder="Search prompts by keyword or title..." oninput="handleSearch()" />
+          <select id="admin-search-ai" class="glass-input" style="max-width:240px;" onchange="handleSearch()">
+            <option value="all">Semua Jenis AI (25)</option>
+            <option value="ChatGPT">1. ChatGPT</option>
+            <option value="Google Gemini">2. Google Gemini</option>
+            <option value="Claude">3. Claude</option>
+            <option value="DeepSeek">4. DeepSeek</option>
+            <option value="Microsoft Copilot">5. Microsoft Copilot</option>
+            <option value="Meta AI">6. Meta AI</option>
+            <option value="Grok">7. Grok</option>
+            <option value="Perplexity AI">8. Perplexity AI</option>
+            <option value="Mistral AI">9. Mistral AI</option>
+            <option value="Qwen AI">10. Qwen AI</option>
+            <option value="Kimi AI">11. Kimi AI</option>
+            <option value="Character.AI">12. Character.AI</option>
+            <option value="Poe AI">13. Poe AI</option>
+            <option value="HuggingChat">14. HuggingChat</option>
+            <option value="Pi AI">15. Pi AI</option>
+            <option value="Le Chat">16. Le Chat</option>
+            <option value="Amazon Q">17. Amazon Q</option>
+            <option value="GitHub Copilot">18. GitHub Copilot</option>
+            <option value="Phind AI">19. Phind AI</option>
+            <option value="You.com AI">20. You.com AI</option>
+            <option value="Z.ai">21. Z.ai</option>
+            <option value="ERNIE Bot">22. ERNIE Bot</option>
+            <option value="Doubao AI">23. Doubao AI</option>
+            <option value="Tencent Yuanbao">24. Tencent Yuanbao</option>
+            <option value="AI Studio">25. AI Studio</option>
+          </select>
+        </div>
+
+        <div class="prompts-grid" id="admin-search-results"></div>
+      </section>
+
+      <!-- 5. PROFILE -->
+      <section class="dashboard-view" id="view-profile">
+        <div class="top-header">
+          <div>
+            <h1 class="page-title">Admin Profile</h1>
+            <p class="page-subtitle">Your credentials and authorization boundaries.</p>
+          </div>
+        </div>
+
+        <div class="glass" style="max-width:640px; padding:32px;">
+          <div style="display:flex; align-items:center; gap:18px; margin-bottom:24px;">
+            <div class="avatar-circle" style="width:64px; height:64px; font-size:1.5rem;" id="admin-profile-avatar">A</div>
+            <div>
+              <h2 id="admin-profile-name" style="font-size:1.3rem; font-weight:800; color:#fff;">Admin</h2>
+              <span class="badge badge-admin">ROLE: ADMIN</span>
+            </div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:0.8rem; color:var(--text-subtle);">Email Address</label>
+            <input type="text" id="admin-profile-email" readonly class="glass-input" />
+          </div>
+          <div style="margin-bottom:24px;">
+            <label style="font-size:0.8rem; color:var(--text-subtle);">Admin Scope Boundaries</label>
+            <div style="padding:14px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:12px; font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+              ✓ Manage own uploaded prompts<br/>
+              ✓ Search public vault catalog<br/>
+              ✓ Auto-assigned Admin badge on submissions<br/>
+              ✕ Global website content modification (Developer Only)<br/>
+              ✕ User role administration (Developer Only)<br/>
+              ✕ Global audit logs access (Developer Only)
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="handleLogout()">Sign Out</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-backdrop" id="admin-detail-modal">
+    <div class="glass modal-box">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge badge-ai" id="admin-modal-ai">ChatGPT</span>
+          <span class="badge" id="admin-modal-status">Status</span>
+        </div>
+        <button onclick="closeAdminDetailModal()" class="btn btn-secondary btn-sm" style="padding:4px 8px;">✕</button>
+      </div>
+      <div id="admin-modal-thumb" style="aspect-ratio:16/9; border-radius:12px; overflow:hidden; margin-bottom:14px; border:1px solid var(--border-subtle);"></div>
+      <h3 id="admin-modal-title" style="color:#fff; font-size:1.25rem; font-weight:800; margin-bottom:10px;">Prompt Detail</h3>
+      <textarea id="admin-modal-content" readonly class="glass-input" style="height:180px; font-family:'JetBrains Mono', monospace; font-size:0.85rem; margin-bottom:16px; line-height:1.5;"></textarea>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button class="btn btn-primary btn-sm" onclick="copyAdminModalContent()">Copy Prompt</button>
+        <button class="btn btn-secondary btn-sm" onclick="closeAdminDetailModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Prompt Modal -->
+  <div class="modal-backdrop" id="admin-edit-modal">
+    <div class="glass modal-box">
+      <div class="modal-header">
+        <h3 style="color:#fff; font-size:1.2rem; font-weight:800;">Edit My Prompt</h3>
+        <button onclick="closeAdminEditModal()" class="btn btn-secondary btn-sm" style="padding:4px 8px;">✕</button>
+      </div>
+      <form onsubmit="handleSaveEditPrompt(event)">
+        <input type="hidden" id="edit-prompt-id" />
+        <div style="margin-bottom:16px;">
+          <label style="font-weight:700; font-size:0.85rem; color:#fff; display:block; margin-bottom:6px;">Judul Prompt</label>
+          <input type="text" id="edit-prompt-title" required maxlength="120" class="glass-input" />
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-weight:700; font-size:0.85rem; color:#fff; display:block; margin-bottom:6px;">Pilihan Jenis AI</label>
+          <select id="edit-prompt-ai" class="glass-input">
+            <option value="ChatGPT">1. ChatGPT</option>
+            <option value="Google Gemini">2. Google Gemini</option>
+            <option value="Claude">3. Claude</option>
+            <option value="DeepSeek">4. DeepSeek</option>
+            <option value="Microsoft Copilot">5. Microsoft Copilot</option>
+            <option value="Meta AI">6. Meta AI</option>
+            <option value="Grok">7. Grok</option>
+            <option value="Perplexity AI">8. Perplexity AI</option>
+            <option value="Mistral AI">9. Mistral AI</option>
+            <option value="Qwen AI">10. Qwen AI</option>
+            <option value="Kimi AI">11. Kimi AI</option>
+            <option value="Character.AI">12. Character.AI</option>
+            <option value="Poe AI">13. Poe AI</option>
+            <option value="HuggingChat">14. HuggingChat</option>
+            <option value="Pi AI">15. Pi AI</option>
+            <option value="Le Chat">16. Le Chat</option>
+            <option value="Amazon Q">17. Amazon Q</option>
+            <option value="GitHub Copilot">18. GitHub Copilot</option>
+            <option value="Phind AI">19. Phind AI</option>
+            <option value="You.com AI">20. You.com AI</option>
+            <option value="Z.ai">21. Z.ai</option>
+            <option value="ERNIE Bot">22. ERNIE Bot</option>
+            <option value="Doubao AI">23. Doubao AI</option>
+            <option value="Tencent Yuanbao">24. Tencent Yuanbao</option>
+            <option value="AI Studio">25. AI Studio</option>
+          </select>
+        </div>
+        <div style="margin-bottom:20px;">
+          <label style="font-weight:700; font-size:0.85rem; color:#fff; display:block; margin-bottom:6px;">Isi Prompt</label>
+          <textarea id="edit-prompt-content" required class="glass-input" style="height:180px; font-family:'JetBrains Mono', monospace; font-size:0.85rem;"></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeAdminEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    function escapeXml(unsafe) {
+      if (!unsafe) return '';
+      return String(unsafe).replace(/[<>&'"]/g, function (c) {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+        }
+      });
+    }
+
+    function generateDeterministicThumbnail(id, title, aiModel = 'ChatGPT') {
+      const safeId = id || 'ryedz-vault';
+      let hash = 0;
+      for (let i = 0; i < (safeId + title).length; i++) {
+        hash = ((hash << 5) - hash) + (safeId + title).charCodeAt(i);
+        hash |= 0;
+      }
+      hash = Math.abs(hash);
+
+      const colorPairs = [
+        { c1: '#38bdf8', c2: '#2563eb', bg1: '#071018', bg2: '#04070a' },
+        { c1: '#8b5cf6', c2: '#38bdf8', bg1: '#0e101a', bg2: '#07080c' },
+        { c1: '#10b981', c2: '#06b6d4', bg1: '#071612', bg2: '#050a08' }
+      ];
+      const palette = colorPairs[hash % colorPairs.length];
+
+      const cleanTitle = (title || 'AI PROMPT').trim();
+      const displayTitle = cleanTitle.length > 36 ? cleanTitle.substring(0, 33) + '...' : cleanTitle;
+      const safeEscapedTitle = escapeXml(displayTitle);
+      const safeAi = escapeXml(aiModel || 'ChatGPT');
+
+      const svgString = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="100%" height="100%">
+        <defs>
+          <linearGradient id="g_${hash}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${palette.bg1}"/>
+            <stop offset="100%" stop-color="${palette.bg2}"/>
+          </linearGradient>
+          <linearGradient id="ac_${hash}" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="${palette.c1}"/>
+            <stop offset="100%" stop-color="${palette.c2}"/>
+          </linearGradient>
+        </defs>
+        <rect width="640" height="360" fill="url(#g_${hash})"/>
+        <circle cx="160" cy="100" r="140" fill="${palette.c1}" opacity="0.25"/>
+        <circle cx="460" cy="220" r="160" fill="${palette.c2}" opacity="0.2"/>
+        <rect x="40" y="40" width="560" height="280" rx="16" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)"/>
+        <rect x="65" y="65" width="130" height="26" rx="13" fill="rgba(255,255,255,0.06)" stroke="url(#ac_${hash})"/>
+        <text x="130" y="82" fill="#e2e8f0" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="700" text-anchor="middle">ADMIN VAULT</text>
+        <rect x="205" y="65" width="150" height="26" rx="13" fill="rgba(56,189,248,0.12)" stroke="rgba(56,189,248,0.4)"/>
+        <text x="280" y="82" fill="#38bdf8" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="700" text-anchor="middle">🤖 ${safeAi}</text>
+        <text x="65" y="165" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-size="25" font-weight="800">${safeEscapedTitle}</text>
+        <rect x="65" y="250" width="280" height="4" rx="2" fill="url(#ac_${hash})"/>
+      </svg>`;
+
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
+    }
+
+    function getLocalData(key, fallback) {
+      try {
+        const val = localStorage.getItem('RYEDZ_' + key);
+        return val ? JSON.parse(val) : fallback;
+      } catch (e) { return fallback; }
+    }
+    function setLocalData(key, val) {
+      try { localStorage.setItem('RYEDZ_' + key, JSON.stringify(val)); } catch (e) {}
+    }
+
+    let currentUser = null;
+    let myPrompts = [];
+
+    function toggleSidebar() {
+      const sb = document.getElementById('admin-sidebar');
+      const ov = document.getElementById('sidebar-overlay');
+      sb.classList.toggle('open');
+      ov.classList.toggle('active');
+    }
+
+    function initAdmin() {
+      let sessionUser = getLocalData('session_user', null);
+      if (!sessionUser || (sessionUser.role !== 'admin' && sessionUser.role !== 'developer')) {
+        document.body.innerHTML = `
+          <div style="min-height:100vh; width:100%; display:flex; align-items:center; justify-content:center; background:#06070a; color:#fff; font-family:'Plus Jakarta Sans', sans-serif; text-align:center; padding:24px;">
+            <div style="max-width:460px; padding:36px; background:rgba(20, 24, 38, 0.85); backdrop-filter:blur(20px); border:1px solid rgba(244,63,94,0.3); border-radius:20px; box-shadow:0 15px 35px rgba(0,0,0,0.6);">
+              <div style="width:60px; height:60px; border-radius:16px; background:rgba(244,63,94,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:#fda4af; font-size:1.8rem;">
+                🛡️
+              </div>
+              <h2 style="color:#ffffff; font-size:1.4rem; font-weight:800; margin-bottom:10px;">Admin Access Restricted</h2>
+              <p style="color:#94a3b8; font-size:0.9rem; line-height:1.6; margin-bottom:24px;">Halaman Admin Dashboard hanya dapat diakses oleh akun dengan Role <b>Admin</b> atau <b>Developer</b>.</p>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <button onclick="handleAdminDirectAuth()" style="display:inline-block; padding:12px 24px; background:linear-gradient(135deg, #38bdf8, #2563eb); color:#fff; border:none; border-radius:12px; font-weight:700; font-size:0.9rem; cursor:pointer;">
+                  Masuk Sebagai Admin
+                </button>
+                <a href="index.html" style="display:inline-block; padding:11px 24px; background:rgba(255,255,255,0.06); color:#cbd5e1; text-decoration:none; border-radius:12px; font-weight:600; font-size:0.9rem;">
+                  Kembali ke Beranda
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      currentUser = sessionUser;
+      renderAdminUI();
+      loadAdminData();
+      updateAdminThumb();
+    }
+
+    function handleAdminDirectAuth() {
+      const email = prompt('Masukkan Email Admin Anda:', 'admin@ryedzvault.com');
+      if (!email) return;
+
+      // Assign admin role and proceed
+      const adminUser = {
+        uid: 'adm-' + Date.now(),
+        email: email,
+        displayName: email.split('@')[0],
+        role: 'admin',
+        createdAt: Date.now()
+      };
+      setLocalData('session_user', adminUser);
+
+      // Register into users store
+      const users = getLocalData('users', []);
+      if (!users.some(u => u.email === email)) {
+        users.push(adminUser);
+        setLocalData('users', users);
+      }
+
+      window.location.reload();
+    }
+
+    function renderAdminUI() {
+      const initial = (currentUser.displayName || currentUser.email || 'A')[0].toUpperCase();
+      document.getElementById('admin-avatar').textContent = initial;
+      document.getElementById('admin-profile-avatar').textContent = initial;
+      document.getElementById('admin-name').textContent = currentUser.displayName || currentUser.email.split('@')[0];
+      document.getElementById('admin-profile-name').textContent = currentUser.displayName || currentUser.email.split('@')[0];
+      document.getElementById('admin-profile-email').value = currentUser.email;
+    }
+
+    function switchNav(name) {
+      document.querySelectorAll('.dashboard-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const v = document.getElementById('view-' + name);
+      const b = document.getElementById('nav-btn-' + name);
+      if (v) v.classList.add('active');
+      if (b) b.classList.add('active');
+
+      // Close mobile sidebar if open
+      const sb = document.getElementById('admin-sidebar');
+      const ov = document.getElementById('sidebar-overlay');
+      if (sb) sb.classList.remove('open');
+      if (ov) ov.classList.remove('active');
+    }
+
+    function loadAdminData() {
+      const allPrompts = getLocalData('prompts', []);
+      myPrompts = allPrompts.filter(p => p.ownerUid === currentUser.uid || p.ownerEmail === currentUser.email);
+
+      document.getElementById('stat-total-prompts').textContent = myPrompts.length;
+      document.getElementById('stat-published-prompts').textContent = myPrompts.filter(p => p.status === 'published').length;
+      document.getElementById('stat-pending-prompts').textContent = myPrompts.filter(p => p.status === 'pending').length;
+
+      // Recent
+      const rec = document.getElementById('admin-recent-list');
+      if (myPrompts.length === 0) {
+        rec.innerHTML = '<div style="color:var(--text-subtle); padding:16px 0;">No submissions yet. Click "Upload Prompt" to create your first one.</div>';
+      } else {
+        rec.innerHTML = myPrompts.slice(0, 4).map(p => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+            <div>
+              <div style="font-weight:700; color:#fff;">${escapeXml(p.title)}</div>
+              <div style="font-size:0.75rem; color:var(--text-subtle);">🤖 ${escapeXml(p.aiModel || 'ChatGPT')} • ${new Date(p.createdAt || Date.now()).toLocaleDateString()}</div>
+            </div>
+            <span class="badge ${p.status === 'published' ? 'badge-published' : p.status === 'rejected' ? 'badge-danger' : 'badge-pending'}">${(p.status || 'pending').toUpperCase()}</span>
+          </div>
+        `).join('');
+      }
+
+      // Filter My Prompts
+      const statusFilter = document.getElementById('filter-myprompt-status')?.value || 'all';
+      const aiFilter = document.getElementById('filter-myprompt-ai')?.value || 'all';
+
+      let filteredMy = myPrompts.filter(p => {
+        const matchStatus = statusFilter === 'all' || p.status === statusFilter;
+        const matchAi = aiFilter === 'all' || p.aiModel === aiFilter;
+        return matchStatus && matchAi;
+      });
+
+      // My Prompts Grid
+      const grid = document.getElementById('admin-myprompts-grid');
+      if (filteredMy.length === 0) {
+        grid.innerHTML = '<div class="glass" style="grid-column:1/-1; padding:32px; text-align:center; color:var(--text-muted);">No prompts match the current filter.</div>';
+      } else {
+        grid.innerHTML = filteredMy.map(p => `
+          <div class="glass-card" style="border-radius:16px; overflow:hidden;">
+            <div style="aspect-ratio:16/9; width:100%;"><img src="${generateDeterministicThumbnail(p.id, p.title, p.aiModel)}" style="width:100%; height:100%; object-fit:cover;" /></div>
+            <div style="padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span class="badge badge-ai">${escapeXml(p.aiModel || 'ChatGPT')}</span>
+                <span class="badge ${p.status === 'published' ? 'badge-published' : p.status === 'rejected' ? 'badge-danger' : 'badge-pending'}">${(p.status || 'pending').toUpperCase()}</span>
+              </div>
+              <h3 style="font-size:1rem; font-weight:700; color:#fff; margin-bottom:12px; line-height:1.4;">${escapeXml(p.title)}</h3>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="openDetail('${p.id}')">View</button>
+                <button class="btn btn-secondary btn-sm" onclick="openEditModal('${p.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteAdminPrompt('${p.id}')">Delete</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      handleSearch();
+    }
+
+    function updateAdminThumb() {
+      const val = document.getElementById('admin-prompt-title').value;
+      const ai = document.getElementById('admin-prompt-ai').value;
+      document.getElementById('admin-title-count').textContent = `${val.length} / 120`;
+      document.getElementById('admin-thumb-preview').innerHTML = `
+        <img src="${generateDeterministicThumbnail('adm-preview', val || 'YOUR PROMPT TITLE', ai)}" style="width:100%; height:100%; object-fit:cover;" />
+      `;
+    }
+
+    function handleAdminUpload(e) {
+      e.preventDefault();
+      const title = document.getElementById('admin-prompt-title').value.trim();
+      const content = document.getElementById('admin-prompt-content').value.trim();
+      const aiModel = document.getElementById('admin-prompt-ai').value;
+
+      if (!title || !content) {
+        showToast('Both Title and Content are required.', 'error');
+        return;
+      }
+
+      const newP = {
+        id: 'prompt-' + Date.now(),
+        title: title,
+        content: content,
+        aiModel: aiModel,
+        ownerUid: currentUser.uid,
+        ownerEmail: currentUser.email,
+        status: 'published', // Admin prompts automatically verified
+        category: 'Admin Verified',
+        accessLevel: 'public',
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+
+      const prompts = getLocalData('prompts', []);
+      prompts.unshift(newP);
+      setLocalData('prompts', prompts);
+
+      showToast('Prompt published directly to Public Vault!', 'success');
+      document.getElementById('admin-prompt-title').value = '';
+      document.getElementById('admin-prompt-content').value = '';
+      loadAdminData();
+      switchNav('myprompts');
+    }
+
+    function openEditModal(id) {
+      const prompts = getLocalData('prompts', []);
+      const p = prompts.find(item => item.id === id);
+      if (!p) return;
+
+      document.getElementById('edit-prompt-id').value = p.id;
+      document.getElementById('edit-prompt-title').value = p.title;
+      document.getElementById('edit-prompt-content').value = p.content;
+      document.getElementById('edit-prompt-ai').value = p.aiModel || 'ChatGPT';
+      document.getElementById('admin-edit-modal').classList.add('active');
+    }
+
+    function closeAdminEditModal() {
+      document.getElementById('admin-edit-modal').classList.remove('active');
+    }
+
+    function handleSaveEditPrompt(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-prompt-id').value;
+      const title = document.getElementById('edit-prompt-title').value.trim();
+      const content = document.getElementById('edit-prompt-content').value.trim();
+      const aiModel = document.getElementById('edit-prompt-ai').value;
+
+      let prompts = getLocalData('prompts', []);
+      const index = prompts.findIndex(p => p.id === id);
+      if (index === -1) return;
+
+      prompts[index].title = title;
+      prompts[index].content = content;
+      prompts[index].aiModel = aiModel;
+      prompts[index].updatedAt = Date.now();
+
+      setLocalData('prompts', prompts);
+      showToast('Prompt updated successfully!', 'success');
+      closeAdminEditModal();
+      loadAdminData();
+    }
+
+    function deleteAdminPrompt(id) {
+      if (!confirm('Are you sure you want to delete this prompt?')) return;
+      let prompts = getLocalData('prompts', []);
+      prompts = prompts.filter(p => p.id !== id);
+      setLocalData('prompts', prompts);
+      showToast('Prompt deleted.', 'info');
+      loadAdminData();
+    }
+
+    function handleSearch() {
+      const prompts = getLocalData('prompts', []);
+      const q = (document.getElementById('admin-search-input')?.value || '').toLowerCase().trim();
+      const ai = document.getElementById('admin-search-ai')?.value || 'all';
+
+      const filtered = prompts.filter(p => {
+        const matchesQuery = !q || (p.title + ' ' + p.content).toLowerCase().includes(q);
+        const matchesAi = ai === 'all' || p.aiModel === ai;
+        return matchesQuery && matchesAi;
+      });
+
+      const res = document.getElementById('admin-search-results');
+      if (!res) return;
+
+      if (filtered.length === 0) {
+        res.innerHTML = '<div class="glass" style="grid-column:1/-1; padding:24px; text-align:center; color:var(--text-subtle);">No prompts match your query and AI filter.</div>';
+        return;
+      }
+
+      res.innerHTML = filtered.map(p => `
+        <div class="glass-card" style="border-radius:16px; overflow:hidden;">
+          <div style="aspect-ratio:16/9; width:100%;"><img src="${generateDeterministicThumbnail(p.id, p.title, p.aiModel)}" style="width:100%; height:100%; object-fit:cover;" /></div>
+          <div style="padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span class="badge badge-ai">${escapeXml(p.aiModel || 'ChatGPT')}</span>
+              <span class="badge ${p.status === 'published' ? 'badge-published' : 'badge-pending'}">${(p.status || 'pending').toUpperCase()}</span>
+            </div>
+            <h3 style="font-size:1rem; font-weight:700; color:#fff; margin-bottom:12px; line-height:1.4;">${escapeXml(p.title)}</h3>
+            <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="openDetail('${p.id}')">Inspect Prompt</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    let currentDetailContent = '';
+
+    function openDetail(id) {
+      const prompts = getLocalData('prompts', []);
+      const p = prompts.find(item => item.id === id);
+      if (!p) return;
+      currentDetailContent = p.content;
+      document.getElementById('admin-modal-title').textContent = p.title;
+      document.getElementById('admin-modal-content').value = p.content;
+      document.getElementById('admin-modal-ai').textContent = p.aiModel || 'ChatGPT';
+      document.getElementById('admin-modal-status').textContent = (p.status || 'pending').toUpperCase();
+      document.getElementById('admin-modal-thumb').innerHTML = `
+        <img src="${generateDeterministicThumbnail(p.id, p.title, p.aiModel)}" style="width:100%; height:100%; object-fit:cover;" />
+      `;
+      document.getElementById('admin-detail-modal').classList.add('active');
+    }
+
+    function closeAdminDetailModal() {
+      document.getElementById('admin-detail-modal').classList.remove('active');
+    }
+
+    async function copyAdminModalContent() {
+      if (!currentDetailContent) return;
+      try {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(currentDetailContent);
+          showToast('Prompt copied to clipboard!', 'success');
+        }
+      } catch (e) {
+        showToast('Copied manually via selection.', 'info');
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('RYEDZ_session_user');
+      window.location.href = 'index.html';
+    }
+
+    function showToast(message, type = 'info') {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = message;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    window.addEventListener('DOMContentLoaded', initAdmin);
+  </script>
+</body>
+</html>

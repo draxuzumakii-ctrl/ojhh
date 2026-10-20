@@ -1,0 +1,8 @@
+{
+  "name": "RYEDZ PROMPT VAULT",
+  "description": "Platform perpustakaan prompt AI modern bergaya Super Glassmorphism dengan Firebase Authentication, Cloud Firestore, moderasi role-based, dan generator thumbnail otomatis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
