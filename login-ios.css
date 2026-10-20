@@ -1,0 +1,381 @@
+/* ============================================================
+   RYEDZ PROMPT VAULT — Login Modal iOS Style
+   Khusus untuk #auth-modal
+   Version: 3.0
+   ============================================================ */
+
+/* ============================================================
+   BACKDROP
+   ============================================================ */
+#auth-modal.modal-backdrop {
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  padding: var(--space-base);
+  padding-top: calc(var(--space-base) + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--space-base) + env(safe-area-inset-bottom, 0px));
+}
+
+/* ============================================================
+   MODAL BOX
+   ============================================================ */
+#auth-modal .modal-box {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px 28px;
+  background: rgba(28, 28, 38, 0.85);
+  backdrop-filter: blur(40px) saturate(1.8);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 32px 64px rgba(0, 0, 0, 0.6);
+  animation: authModalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+#auth-modal .modal-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.5) 50%,
+    transparent 100%);
+  pointer-events: none;
+}
+
+@keyframes authModalIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+#auth-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 0;
+  gap: 12px;
+}
+
+#auth-modal .modal-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #f5f5f7;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+}
+
+#auth-modal .modal-close {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50%;
+  color: rgba(245, 245, 247, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+#auth-modal .modal-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #f5f5f7;
+}
+
+#auth-modal .modal-close:active {
+  transform: scale(0.88);
+}
+
+/* ============================================================
+   TAB PILLS — iOS Segmented Control
+   ============================================================ */
+#auth-modal .tab-pills {
+  display: flex;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  position: relative;
+  gap: 2px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+#auth-modal .tab-pill {
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(245, 245, 247, 0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.01em;
+}
+
+#auth-modal .tab-pill:hover:not(.active) {
+  color: rgba(245, 245, 247, 0.75);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+#auth-modal .tab-pill.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f5f5f7;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+#auth-modal .tab-pill:active {
+  transform: scale(0.96);
+}
+
+/* ============================================================
+   ERROR BOX
+   ============================================================ */
+#auth-modal #auth-error-box {
+  padding: 12px 14px;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  border-radius: 10px;
+  color: #fda4af;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  margin-bottom: 16px;
+  animation: authErrorShake 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#auth-modal #auth-error-box::before {
+  content: '⚠';
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+@keyframes authErrorShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* ============================================================
+   FORM LABELS
+   ============================================================ */
+#auth-modal label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(245, 245, 247, 0.62);
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+#auth-modal .glass-input,
+#auth-modal input[type="text"],
+#auth-modal input[type="email"],
+#auth-modal input[type="password"] {
+  width: 100%;
+  padding: 13px 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  color: #f5f5f7;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 48px;
+}
+
+#auth-modal .glass-input::placeholder {
+  color: rgba(245, 245, 247, 0.35);
+}
+
+#auth-modal .glass-input:hover:not(:focus) {
+  background: rgba(0, 0, 0, 0.42);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+#auth-modal .glass-input:focus {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 0 0 4px rgba(139, 92, 246, 0.12);
+}
+
+#auth-modal .glass-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#auth-modal #name-input-group,
+#auth-modal #password-input-group {
+  margin-bottom: 16px;
+}
+
+#auth-modal #name-input-group[style*="display: none"],
+#auth-modal #password-input-group[style*="display: none"] {
+  display: none !important;
+}
+
+/* ============================================================
+   SUBMIT BUTTON
+   ============================================================ */
+#auth-modal #auth-submit-btn {
+  width: 100%;
+  padding: 14px 20px;
+  margin-top: 8px;
+  background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(124, 58, 237, 0.3);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.01em;
+}
+
+#auth-modal #auth-submit-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 6px 24px rgba(124, 58, 237, 0.4);
+}
+
+#auth-modal #auth-submit-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+#auth-modal #auth-submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: grayscale(0.3);
+}
+
+/* ============================================================
+   FOOTER TEXT
+   ============================================================ */
+#auth-modal .auth-footer-text {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: rgba(245, 245, 247, 0.38);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+@media (max-width: 640px) {
+  #auth-modal.modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+    padding-bottom: 0;
+  }
+  #auth-modal .modal-box {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 24px 24px 0 0;
+    padding: 28px 20px 36px;
+    padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px));
+    animation: authSheetIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-height: 92vh;
+    max-height: 92dvh;
+    overflow-y: auto;
+  }
+  @keyframes authSheetIn {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  #auth-modal .modal-title { font-size: 1.35rem; }
+  #auth-modal .tab-pill { padding: 8px 8px; font-size: 0.82rem; }
+}
+
+@media (max-width: 380px) {
+  #auth-modal .modal-box {
+    padding: 24px 16px 32px;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  }
+  #auth-modal .modal-title { font-size: 1.2rem; }
+  #auth-modal .glass-input,
+  #auth-modal input[type="text"],
+  #auth-modal input[type="email"],
+  #auth-modal input[type="password"] {
+    padding: 11px 14px;
+    font-size: 16px;
+  }
+}
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  #auth-modal .modal-box,
+  #auth-modal .tab-pill,
+  #auth-modal #auth-submit-btn,
+  #auth-modal .modal-close,
+  #auth-modal #auth-error-box {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   END
+   ============================================================ */

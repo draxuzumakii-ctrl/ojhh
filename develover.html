@@ -1,1790 +1,688 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Control Center — RYEDZ PROMPT VAULT</title>
-  <meta name="description" content="Central developer administration for RYEDZ PROMPT VAULT. Real-time prompt moderation, role management, banners, announcements, and maintenance control." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
-  <!-- Firebase Web SDK Compat (CDN) -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
-
-  <style>
-    :root {
-      --bg-base: #050609;
-      --bg-surface: rgba(13, 15, 24, 0.75);
-      --bg-surface-elevated: rgba(22, 26, 42, 0.85);
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --border-highlight: rgba(168, 85, 247, 0.35);
-      --accent-purple: #8b5cf6;
-      --accent-purple-glow: rgba(139, 92, 246, 0.3);
-      --accent-blue: #38bdf8;
-      --accent-blue-glow: rgba(56, 189, 248, 0.25);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-subtle: #64748b;
-      --danger: #f43f5e;
-      --success: #10b981;
-      --warning: #f59e0b;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: var(--bg-base);
-      color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-      min-height: 100vh;
-      background-image: 
-        radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 90% 90%, rgba(56, 189, 248, 0.08) 0%, transparent 45%);
-      background-attachment: fixed;
-    }
-
-    .dev-layout { display: flex; width: 100%; min-height: 100vh; position: relative; }
-
-    /* Developer Sidebar */
-    .sidebar {
-      width: 290px;
-      background: rgba(9, 11, 18, 0.94);
-      backdrop-filter: blur(24px) saturate(190%);
-      -webkit-backdrop-filter: blur(24px) saturate(190%);
-      border-right: 1px solid var(--border-subtle);
-      padding: 22px 16px;
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0; bottom: 0; left: 0;
-      z-index: 100;
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-      color: #ffffff;
-      font-weight: 800;
-      font-size: 1.05rem;
-      margin-bottom: 24px;
-      padding-left: 6px;
-    }
-    .brand-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 9px;
-      background: linear-gradient(135deg, #a855f7 0%, #38bdf8 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
-    }
-    .brand-icon svg { width: 18px; height: 18px; fill: #ffffff; }
-
-    .nav-menu {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-    .nav-menu::-webkit-scrollbar { width: 4px; }
-    .nav-menu::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 9px 12px;
-      border-radius: 10px;
-      color: var(--text-muted);
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      user-select: none;
-    }
-    .nav-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.05); }
-    .nav-item.active {
-      color: #ffffff;
-      background: linear-gradient(90deg, rgba(168, 85, 247, 0.25), rgba(168, 85, 247, 0.05));
-      border: 1px solid rgba(168, 85, 247, 0.35);
-      box-shadow: 0 4px 15px -3px rgba(168, 85, 247, 0.3);
-    }
-
-    .badge-count {
-      padding: 2px 7px;
-      border-radius: 99px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      background: rgba(245, 158, 11, 0.25);
-      color: #fbbf24;
-    }
-
-    /* Mobile Header */
-    .mobile-header {
-      display: none;
-      width: 100%;
-      height: 60px;
-      background: rgba(9, 11, 18, 0.95);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 0 16px;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 90;
-    }
-
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.65);
-      backdrop-filter: blur(4px);
-      z-index: 95;
-    }
-    .sidebar-overlay.active { display: block; }
-
-    /* Main Area */
-    .main-wrapper {
-      margin-left: 290px;
-      flex: 1;
-      padding: 26px 36px 60px;
-      max-width: 1360px;
-      min-width: 0;
-      width: calc(100% - 290px);
-    }
-
-    .top-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .page-title { font-size: 1.75rem; font-weight: 800; color: #ffffff; }
-    .page-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 2px; }
-
-    /* Super Glassmorphism Utility */
-    .glass {
-      background: var(--bg-surface);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid var(--border-subtle);
-      border-radius: 18px;
-    }
-    .glass-card {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%), var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      transition: all 0.2s ease;
-    }
-    .glass-card:hover {
-      border-color: rgba(168, 85, 247, 0.35);
-      box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.6);
-    }
-    .glass-input {
-      width: 100%;
-      background: rgba(10, 12, 18, 0.7);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-main);
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.92rem;
-      outline: none;
-      font-family: inherit;
-    }
-    .glass-input:focus {
-      border-color: var(--accent-purple);
-      box-shadow: 0 0 0 3px var(--accent-purple-glow);
-    }
-    select.glass-input option {
-      background: #0f121d;
-      color: #fff;
-    }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      font-family: inherit;
-      font-size: 0.88rem;
-      font-weight: 600;
-      padding: 9px 18px;
-      border-radius: 11px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      border: none;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
-      color: #ffffff;
-      box-shadow: 0 4px 18px rgba(168, 85, 247, 0.35);
-    }
-    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-main);
-      border: 1px solid var(--border-subtle);
-    }
-    .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
-    .btn-success {
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-    }
-    .btn-danger {
-      background: rgba(244, 63, 94, 0.2);
-      color: #fda4af;
-      border: 1px solid rgba(244, 63, 94, 0.4);
-    }
-    .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; }
-
-    /* Badges */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .badge-dev { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
-    .badge-admin { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
-    .badge-user { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
-    .badge-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
-    .badge-published { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
-    .badge-rejected { background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
-    .badge-ai { background: rgba(139, 92, 246, 0.15); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); }
-
-    .dev-view { display: none; }
-    .dev-view.active { display: block; animation: fadeIn 0.25s ease; }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-    .stat-card { padding: 20px; }
-    .stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
-    .stat-value { font-size: 2rem; font-weight: 800; color: #fff; }
-
-    /* Tables */
-    .table-container { width: 100%; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th {
-      padding: 12px 16px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border-subtle);
-      text-transform: uppercase;
-    }
-    td {
-      padding: 14px 16px;
-      font-size: 0.88rem;
-      color: var(--text-main);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      vertical-align: middle;
-    }
-    tr:hover td { background: rgba(255, 255, 255, 0.02); }
-
-    /* Modal Backdrop */
-    .modal-backdrop {
-      position: fixed; inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(14px);
-      display: none; align-items: center; justify-content: center;
-      z-index: 1000; padding: 16px;
-    }
-    .modal-backdrop.active { display: flex; animation: fadeIn 0.2s ease; }
-    .modal-box { width: 100%; max-width: 620px; padding: 28px; max-height: 90vh; overflow-y: auto; }
-
-    /* Toast */
-    .toast-container {
-      position: fixed; bottom: 24px; right: 24px;
-      z-index: 9999; display: flex; flex-direction: column; gap: 10px;
-    }
-    .toast {
-      padding: 12px 18px; border-radius: 12px;
-      background: rgba(18, 20, 32, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #ffffff; font-size: 0.9rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-    @media (max-width: 900px) {
-      .mobile-header { display: flex; }
-      .sidebar {
-        transform: translateX(-100%);
-      }
-      .sidebar.open {
-        transform: translateX(0);
-      }
-      .main-wrapper {
-        margin-left: 0;
-        width: 100%;
-        padding: 20px 16px 40px;
-      }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#08080c" />
+<title>Developer Control Center — RYEDZ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="glassmorphism.css" />
+<style>
+  body { display: flex; }
+  .dev-layout { display: flex; width: 100%; min-height: 100vh; }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .status-dot.active { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.6); }
+  .status-dot.inactive { background: #64748b; }
+</style>
 </head>
 <body>
 
-  <!-- Mobile Top Bar -->
-  <div class="mobile-header">
-    <a href="index.html" class="brand" style="margin-bottom:0;">
+<div class="mobile-header-bar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="btn btn-secondary btn-sm" onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+    <span style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">Developer Center</span>
+  </div>
+</div>
+
+<div class="dev-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="brand" style="margin-bottom:20px;">
       <div class="brand-icon">
         <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg>
       </div>
-      <span>DEVELOPER CENTER</span>
+      <span>RYEDZ DEV</span>
     </a>
-    <button class="btn btn-secondary btn-sm" onclick="toggleSidebar()">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-    </button>
-  </div>
+
+    <ul class="nav-menu">
+      <li><div class="nav-item active" onclick="switchTab('overview')" id="nav-overview">1. Overview</div></li>
+      <li><div class="nav-item" onclick="switchTab('allprompts')" id="nav-allprompts">2. All Prompts</div></li>
+      <li><div class="nav-item" onclick="switchTab('pending')" id="nav-pending">
+        <span>3. Pending</span>
+        <span class="badge-count" id="badge-pending-count">0</span>
+      </div></li>
+      <li><div class="nav-item" onclick="switchTab('users')" id="nav-users">4. Users</div></li>
+      <li><div class="nav-item" onclick="switchTab('admins')" id="nav-admins">5. Admins</div></li>
+      <li><div class="nav-item" onclick="switchTab('maintenance')" id="nav-maintenance">
+        <span>6. Maintenance</span>
+        <span class="status-dot" id="maint-indicator"></span>
+      </div></li>
+      <li><div class="nav-item" onclick="switchTab('content')" id="nav-content">7. Content</div></li>
+      <li><div class="nav-item" onclick="switchTab('audit')" id="nav-audit">8. Audit Logs</div></li>
+      <li><div class="nav-item" onclick="switchTab('settings')" id="nav-settings">9. Settings</div></li>
+    </ul>
+
+    <div class="sidebar-user">
+      <div class="avatar-circle" style="background:linear-gradient(135deg,#a855f7,#ec4899);">D</div>
+      <div class="user-info-text">
+        <div class="user-name" id="dev-email-badge">dev@ryedz.com</div>
+        <div class="user-role-badge" style="color:#c084fc;">SUPER DEV</div>
+      </div>
+      <button onclick="handleLogout()" class="btn btn-secondary btn-sm btn-icon" title="Logout" aria-label="Logout">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      </button>
+    </div>
+  </aside>
 
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-  <div class="dev-layout">
-    <!-- Developer Sidebar Navigation (14 Operational Modules) -->
-    <aside class="sidebar" id="dev-sidebar">
-      <a href="index.html" class="brand">
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg>
-        </div>
-        <span>RYEDZ DEV CENTER</span>
-      </a>
-
-      <ul class="nav-menu">
-        <li><div class="nav-item active" onclick="switchTab('overview')" id="nav-overview"><span>1. Operations Overview</span></div></li>
-        <li><div class="nav-item" onclick="switchTab('allprompts')" id="nav-allprompts"><span>2. All Vault Prompts</span></div></li>
-        <li>
-          <div class="nav-item" onclick="switchTab('pending')" id="nav-pending">
-            <span>3. Pending Moderation</span>
-            <span class="badge-count" id="badge-pending-count">0</span>
-          </div>
-        </li>
-        <li><div class="nav-item" onclick="switchTab('categories')" id="nav-categories"><span>4. Categories & Taxonomies</span></div></li>
-        <li><div class="nav-item" onclick="switchTab('users')" id="nav-users"><span>5. User Directory</span></div></li>
-        <li><div class="nav-item" onclick="switchTab('admins')" id="nav-admins"><span>6. Admin Management</span></div></li>
-        <li><div class="nav-item" onclick="switchTab('announcements')" id="nav-announcements"><span>7. Announcements</span></div></li>
-        <li><div class="nav-item" onclick="switchTab('notifications')" id="nav-notifications"><span>8. Notification Center</span></div></li>
-        <li><div class="nav-item" onclick="switchTab('banners')" id="nav-banners"><span>9. Banner Manager</span></div></li>
-        <li>
-          <div class="nav-item" onclick="switchTab('maintenance')" id="nav-maintenance">
-            <span>10. Maintenance Control</span>
-            <span id="maint-indicator" style="width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
-          </div>
-        </li>
-        <li><div class="nav-item" onclick="switchTab('content')" id="nav-content"><span>11. Website Content</span></div></li>
-        <li><div class="nav-item" onclick="switchTab('analytics')" id="nav-analytics"><span>12. Analytics</span></div></li>
-        <li><div class="nav-item" onclick="switchTab('audit')" id="nav-audit"><span>13. Audit Logs</span></div></li>
-        <li><div class="nav-item" onclick="switchTab('settings')" id="nav-settings"><span>14. System Settings</span></div></li>
-      </ul>
-
-      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+  <!-- MAIN -->
+  <main class="main-wrapper">
+    <!-- OVERVIEW -->
+    <section class="dev-view active" id="view-overview">
+      <div class="top-header">
         <div>
-          <div style="font-size:0.82rem; font-weight:700; color:#fff;" id="dev-email-badge">ryedzoffc@gmail.com</div>
-          <span class="badge badge-dev">SUPER DEVELOPER</span>
+          <h1 class="page-title">Developer Center</h1>
+          <p class="page-subtitle">Full control & moderation.</p>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="handleLogout()" title="Logout">Exit</button>
+        <a href="promt.html" class="btn btn-secondary btn-sm" target="_blank">Open Vault ↗</a>
       </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-wrapper">
-      
-      <!-- 1. OVERVIEW -->
-      <section class="dev-view active" id="view-overview">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Developer Operations Center</h1>
-            <p class="page-subtitle">Real-time statistics computed live across all database collections.</p>
-          </div>
-          <a href="promt.html" class="btn btn-secondary btn-sm" target="_blank">Open Public Vault ↗</a>
+      <div class="stats-grid">
+        <div class="glass stat-card"><div class="stat-label">Users</div><div class="stat-value" id="stat-users">0</div></div>
+        <div class="glass stat-card"><div class="stat-label">Prompts</div><div class="stat-value" id="stat-prompts">0</div></div>
+        <div class="glass stat-card"><div class="stat-label">Published</div><div class="stat-value" style="color:#6ee7b7;" id="stat-published">0</div></div>
+        <div class="glass stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:#fcd34d;" id="stat-pending">0</div></div>
+        <div class="glass stat-card"><div class="stat-label">Rejected</div><div class="stat-value" style="color:#fda4af;" id="stat-rejected">0</div></div>
+        <div class="glass stat-card"><div class="stat-label">Admins</div><div class="stat-value" style="color:#7dd3fc;" id="stat-admins">0</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px;">
+        <div class="glass" style="padding:20px;">
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:14px;">Pending Queue</h3>
+          <div id="quick-pending-list"></div>
         </div>
-
-        <div class="stats-grid">
-          <div class="glass stat-card">
-            <div class="stat-label">Total Users</div>
-            <div class="stat-value" id="stat-dev-users">0</div>
-          </div>
-          <div class="glass stat-card">
-            <div class="stat-label">Total Prompts</div>
-            <div class="stat-value" id="stat-dev-prompts">0</div>
-          </div>
-          <div class="glass stat-card">
-            <div class="stat-label">Published Prompts</div>
-            <div class="stat-value" style="color:#34d399;" id="stat-dev-published">0</div>
-          </div>
-          <div class="glass stat-card">
-            <div class="stat-label">Pending Review</div>
-            <div class="stat-value" style="color:#fbbf24;" id="stat-dev-pending">0</div>
-          </div>
-          <div class="glass stat-card">
-            <div class="stat-label">Rejected Prompts</div>
-            <div class="stat-value" style="color:#fda4af;" id="stat-dev-rejected">0</div>
-          </div>
-          <div class="glass stat-card">
-            <div class="stat-label">Total Admins</div>
-            <div class="stat-value" style="color:#38bdf8;" id="stat-dev-admins">0</div>
-          </div>
+        <div class="glass" style="padding:20px;">
+          <h3 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:14px;">Recent Audit</h3>
+          <div id="quick-audit-list"></div>
         </div>
+      </div>
+    </section>
 
-        <!-- Recent Moderation & Logs -->
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
-          <div class="glass" style="padding:22px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-              <h3 style="font-size:1.05rem; font-weight:700; color:#fff;">Pending Moderation Queue</h3>
-              <button class="btn btn-secondary btn-sm" onclick="switchTab('pending')">Process Queue</button>
-            </div>
-            <div id="quick-pending-list"></div>
-          </div>
-
-          <div class="glass" style="padding:22px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-              <h3 style="font-size:1.05rem; font-weight:700; color:#fff;">Recent Audit Actions</h3>
-              <button class="btn btn-secondary btn-sm" onclick="switchTab('audit')">All Logs</button>
-            </div>
-            <div id="quick-audit-list"></div>
-          </div>
+    <!-- ALL PROMPTS -->
+    <section class="dev-view" id="view-allprompts">
+      <div class="top-header">
+        <div>
+          <h1 class="page-title">All Prompts</h1>
+          <p class="page-subtitle">Inspect, edit, delete.</p>
         </div>
-      </section>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <input type="text" id="filter-prompts-input" placeholder="Search..." class="glass-input" style="flex:1;min-width:200px;" oninput="renderAllPromptsTable()" />
+        <select id="filter-prompts-ai" class="glass-input" style="max-width:180px;" onchange="renderAllPromptsTable()">
+          <option value="all">All AI</option>
+          <option value="ChatGPT">ChatGPT</option>
+          <option value="Claude">Claude</option>
+          <option value="Google Gemini">Google Gemini</option>
+          <option value="DeepSeek">DeepSeek</option>
+        </select>
+      </div>
+      <div class="glass table-container">
+        <table>
+          <thead><tr><th>Title</th><th>AI</th><th>Author</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="all-prompts-tbody"></tbody>
+        </table>
+      </div>
+    </section>
 
-      <!-- 2. ALL PROMPTS (WITH 25 AI FILTER & EDIT/INSPECT) -->
-      <section class="dev-view" id="view-allprompts">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">All Vault Prompts</h1>
-            <p class="page-subtitle">Inspect, edit, publish, or permanently remove prompts across the system.</p>
-          </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <input type="text" id="filter-prompts-input" placeholder="Search by title or author..." class="glass-input" style="max-width:240px;" oninput="renderAllPromptsTable()" />
-            <select id="filter-prompts-ai" class="glass-input" style="max-width:220px;" onchange="renderAllPromptsTable()">
-              <option value="all">Semua Jenis AI (25)</option>
-              <option value="ChatGPT">1. ChatGPT</option>
-              <option value="Google Gemini">2. Google Gemini</option>
-              <option value="Claude">3. Claude</option>
-              <option value="DeepSeek">4. DeepSeek</option>
-              <option value="Microsoft Copilot">5. Microsoft Copilot</option>
-              <option value="Meta AI">6. Meta AI</option>
-              <option value="Grok">7. Grok</option>
-              <option value="Perplexity AI">8. Perplexity AI</option>
-              <option value="Mistral AI">9. Mistral AI</option>
-              <option value="Qwen AI">10. Qwen AI</option>
-              <option value="Kimi AI">11. Kimi AI</option>
-              <option value="Character.AI">12. Character.AI</option>
-              <option value="Poe AI">13. Poe AI</option>
-              <option value="HuggingChat">14. HuggingChat</option>
-              <option value="Pi AI">15. Pi AI</option>
-              <option value="Le Chat">16. Le Chat</option>
-              <option value="Amazon Q">17. Amazon Q</option>
-              <option value="GitHub Copilot">18. GitHub Copilot</option>
-              <option value="Phind AI">19. Phind AI</option>
-              <option value="You.com AI">20. You.com AI</option>
-              <option value="Z.ai">21. Z.ai</option>
-              <option value="ERNIE Bot">22. ERNIE Bot</option>
-              <option value="Doubao AI">23. Doubao AI</option>
-              <option value="Tencent Yuanbao">24. Tencent Yuanbao</option>
-              <option value="AI Studio">25. AI Studio</option>
+    <!-- PENDING -->
+    <section class="dev-view" id="view-pending">
+      <div class="top-header">
+        <div>
+          <h1 class="page-title">Pending Moderation</h1>
+          <p class="page-subtitle">Approve or reject.</p>
+        </div>
+      </div>
+      <div id="pending-queue-container" style="display:flex;flex-direction:column;gap:16px;"></div>
+    </section>
+
+    <!-- USERS -->
+    <section class="dev-view" id="view-users">
+      <div class="top-header">
+        <div>
+          <h1 class="page-title">User Directory</h1>
+          <p class="page-subtitle">All registered users.</p>
+        </div>
+      </div>
+      <div class="glass table-container">
+        <table>
+          <thead><tr><th>User</th><th>Role</th><th>Joined</th><th>Action</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ADMINS -->
+    <section class="dev-view" id="view-admins">
+      <div class="top-header">
+        <div>
+          <h1 class="page-title">Admin Management</h1>
+          <p class="page-subtitle">Promote / demote.</p>
+        </div>
+      </div>
+      <div class="glass" style="padding:20px;margin-bottom:20px;">
+        <h3 style="font-size:1rem;color:var(--text-primary);margin-bottom:12px;">Promote to Admin</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <input type="email" id="promote-email-input" placeholder="user@example.com" class="glass-input" style="flex:1;min-width:200px;" />
+          <button class="btn btn-primary" onclick="promoteToAdmin()">Grant</button>
+        </div>
+      </div>
+      <div class="glass table-container">
+        <table>
+          <thead><tr><th>Email</th><th>Name</th><th>Actions</th></tr></thead>
+          <tbody id="admins-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MAINTENANCE -->
+    <section class="dev-view" id="view-maintenance">
+      <div class="top-header">
+        <div>
+          <h1 class="page-title">Maintenance</h1>
+          <p class="page-subtitle">Control site status.</p>
+        </div>
+      </div>
+      <div class="glass" style="max-width:680px;padding:24px;">
+        <form onsubmit="handleSaveMaintenance(event)">
+          <div class="form-group">
+            <label class="form-label">System Mode</label>
+            <select id="maint-mode-select" class="glass-input" style="font-weight:600;">
+              <option value="NORMAL">NORMAL</option>
+              <option value="NOTICE">NOTICE</option>
+              <option value="LIMITED">LIMITED</option>
+              <option value="MAINTENANCE">MAINTENANCE</option>
             </select>
           </div>
-        </div>
-
-        <div class="glass table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>AI Model</th>
-                <th>Author</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="all-prompts-tbody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 3. PENDING APPROVALS -->
-      <section class="dev-view" id="view-pending">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Pending Moderation Queue</h1>
-            <p class="page-subtitle">Review incoming prompt submissions. Approve or reject with structured feedback.</p>
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input type="text" id="maint-title-input" class="glass-input" />
           </div>
-        </div>
-
-        <div id="pending-queue-container" style="display:flex; flex-direction:column; gap:16px;"></div>
-      </section>
-
-      <!-- 4. CATEGORIES -->
-      <section class="dev-view" id="view-categories">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Category Management</h1>
-            <p class="page-subtitle">Manage taxonomy tags and automated classification presets.</p>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="maint-desc-input" class="glass-input" style="height:100px;"></textarea>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="openAddCategoryModal()">+ Add Category</button>
-        </div>
-
-        <div class="glass table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Category Name</th>
-                <th>Keywords Rule</th>
-                <th>Total Prompts</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="categories-tbody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 5. USERS -->
-      <section class="dev-view" id="view-users">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Users Directory</h1>
-            <p class="page-subtitle">Inspect registered creators, roles, and account statuses.</p>
+          <div class="form-group">
+            <label class="form-label">Reason</label>
+            <input type="text" id="maint-reason-input" class="glass-input" />
           </div>
-        </div>
-
-        <div class="glass table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>User / Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Joined</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="users-tbody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 6. ADMIN MANAGEMENT -->
-      <section class="dev-view" id="view-admins">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Admin Management</h1>
-            <p class="page-subtitle">Promote trustworthy users to Admin or demote them back to User.</p>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+            <input type="checkbox" id="maint-active-checkbox" style="width:20px;height:20px;" />
+            <label for="maint-active-checkbox" style="font-weight:600;color:var(--text-primary);">Activate Now</label>
           </div>
-        </div>
-
-        <div class="glass" style="padding:24px; margin-bottom:24px;">
-          <h3 style="font-size:1.1rem; color:#fff; margin-bottom:12px;">Promote User to Admin</h3>
-          <div style="display:flex; gap:12px; max-width:600px; flex-wrap:wrap;">
-            <input type="email" id="promote-email-input" placeholder="Enter user's registered email..." class="glass-input" style="flex:1; min-width:240px;" />
-            <button class="btn btn-primary" onclick="promoteToAdmin()">Grant Admin</button>
-          </div>
-        </div>
-
-        <div class="glass table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Admin Email</th>
-                <th>Display Name</th>
-                <th>Assigned Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="admins-tbody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 7. ANNOUNCEMENTS -->
-      <section class="dev-view" id="view-announcements">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Announcements Manager</h1>
-            <p class="page-subtitle">Publish system notices, bug fixes, updates, or maintenance notes.</p>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="openCreateAnnouncementModal()">+ New Announcement</button>
-        </div>
-
-        <div id="announcements-list" style="display:flex; flex-direction:column; gap:14px;"></div>
-      </section>
-
-      <!-- 8. NOTIFICATION CENTER -->
-      <section class="dev-view" id="view-notifications">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Notification Center</h1>
-            <p class="page-subtitle">Send targeted in-app notifications to user groups or individuals.</p>
-          </div>
-        </div>
-
-        <div class="glass" style="max-width:700px; padding:28px;">
-          <form onsubmit="handleSendNotification(event)">
-            <div style="margin-bottom:16px;">
-              <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Target Audience</label>
-              <select id="notif-target" class="glass-input">
-                <option value="all">All Registered Users</option>
-                <option value="user">Users Only</option>
-                <option value="admin">Admins Only</option>
-              </select>
-            </div>
-            <div style="margin-bottom:16px;">
-              <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Notification Title</label>
-              <input type="text" id="notif-title" required class="glass-input" placeholder="e.g. New Prompt Vault Features Available" />
-            </div>
-            <div style="margin-bottom:20px;">
-              <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Message</label>
-              <textarea id="notif-message" required class="glass-input" style="height:120px;" placeholder="Message contents..."></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Broadcast Notification</button>
-          </form>
-        </div>
-      </section>
-
-      <!-- 9. BANNER MANAGER -->
-      <section class="dev-view" id="view-banners">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Banner Manager</h1>
-            <p class="page-subtitle">Configure top banners, alerts, and promotions rendered across pages.</p>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="openCreateBannerModal()">+ Add Banner</button>
-        </div>
-
-        <div id="banners-list" style="display:flex; flex-direction:column; gap:14px;"></div>
-      </section>
-
-      <!-- 10. MAINTENANCE CONTROL -->
-      <section class="dev-view" id="view-maintenance">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Maintenance Control</h1>
-            <p class="page-subtitle">Switch between 4 maintenance modes and customize user-facing notices.</p>
-          </div>
-        </div>
-
-        <div class="glass" style="max-width:740px; padding:32px;">
-          <form onsubmit="handleSaveMaintenance(event)">
-            <div style="margin-bottom:20px;">
-              <label style="font-size:0.9rem; font-weight:700; color:#fff; display:block; margin-bottom:8px;">System Mode</label>
-              <select id="maint-mode-select" class="glass-input" style="font-weight:700;">
-                <option value="NORMAL">NORMAL — Website operates standardly</option>
-                <option value="NOTICE">NOTICE — Website active with maintenance banner</option>
-                <option value="LIMITED">LIMITED — New uploads paused</option>
-                <option value="MAINTENANCE">MAINTENANCE — Full maintenance screen for non-developers</option>
-              </select>
-            </div>
-
-            <div style="margin-bottom:16px;">
-              <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Maintenance Notice Title</label>
-              <input type="text" id="maint-title-input" class="glass-input" value="RYEDZ PROMPT VAULT SEDANG DALAM PEMELIHARAAN" />
-            </div>
-
-            <div style="margin-bottom:16px;">
-              <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Description Message</label>
-              <textarea id="maint-desc-input" class="glass-input" style="height:100px;">Kami sedang meningkatkan sistem untuk memberikan pengalaman yang lebih baik. Silakan kembali beberapa saat lagi.</textarea>
-            </div>
-
-            <div style="margin-bottom:16px;">
-              <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Reason / Cause</label>
-              <input type="text" id="maint-reason-input" class="glass-input" value="Scheduled security hardening & database optimization" />
-            </div>
-
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
-              <input type="checkbox" id="maint-active-checkbox" style="width:20px; height:20px;" />
-              <label for="maint-active-checkbox" style="font-weight:700; color:#fff;">Activate Maintenance Mode Now</label>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Save Maintenance Settings</button>
-          </form>
-        </div>
-      </section>
-
-      <!-- 11. WEBSITE CONTENT -->
-      <section class="dev-view" id="view-content">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Website Content Management</h1>
-            <p class="page-subtitle">Customize landing page copy dynamically without rebuilding.</p>
-          </div>
-        </div>
-
-        <div class="glass" style="max-width:760px; padding:32px;">
-          <form onsubmit="handleSaveContent(event)">
-            <div style="margin-bottom:16px;">
-              <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Hero Title</label>
-              <input type="text" id="content-hero-title" class="glass-input" value="YOUR AI PROMPT LIBRARY" />
-            </div>
-            <div style="margin-bottom:16px;">
-              <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Hero Subtitle</label>
-              <textarea id="content-hero-desc" class="glass-input" style="height:100px;">Discover, save, and share powerful AI prompts in one premium workspace.</textarea>
-            </div>
-            <div style="margin-bottom:24px;">
-              <label style="font-size:0.85rem; font-weight:700; display:block; color:#fff; margin-bottom:6px;">Footer Copyright Text</label>
-              <input type="text" id="content-footer-text" class="glass-input" value="© 2026 RYEDZ PROMPT VAULT. Built with Super Glassmorphism Architecture." />
-            </div>
-            <button type="submit" class="btn btn-primary">Publish Content Changes</button>
-          </form>
-        </div>
-      </section>
-
-      <!-- 12. ANALYTICS -->
-      <section class="dev-view" id="view-analytics">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Platform Analytics</h1>
-            <p class="page-subtitle">Real metrics derived from live prompts and user engagement.</p>
-          </div>
-        </div>
-
-        <div class="stats-grid">
-          <div class="glass stat-card">
-            <div class="stat-label">Approval Rate</div>
-            <div class="stat-value" style="color:#34d399;" id="analytics-approval-rate">100%</div>
-          </div>
-          <div class="glass stat-card">
-            <div class="stat-label">Rejection Rate</div>
-            <div class="stat-value" style="color:#fda4af;" id="analytics-rejection-rate">0%</div>
-          </div>
-          <div class="glass stat-card">
-            <div class="stat-label">Avg Moderation Time</div>
-            <div class="stat-value" style="color:#38bdf8;">&lt; 5 Min</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 13. AUDIT LOGS -->
-      <section class="dev-view" id="view-audit">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">Immutable Audit Logs</h1>
-            <p class="page-subtitle">Chronological record of role updates, moderation approvals, and configuration changes.</p>
-          </div>
-          <button class="btn btn-secondary btn-sm" onclick="loadAuditLogs()">Refresh Logs</button>
-        </div>
-
-        <div class="glass table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Action</th>
-                <th>Details</th>
-                <th>Actor</th>
-                <th>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody id="audit-logs-tbody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 14. SYSTEM SETTINGS -->
-      <section class="dev-view" id="view-settings">
-        <div class="top-header">
-          <div>
-            <h1 class="page-title">System Settings & Firebase</h1>
-            <p class="page-subtitle">Diagnostic health checks and configuration controls.</p>
-          </div>
-        </div>
-
-        <div class="glass" style="max-width:700px; padding:32px;">
-          <div style="margin-bottom:20px;">
-            <div style="font-weight:700; color:#fff; margin-bottom:4px;">Super Developer Account</div>
-            <div style="color:#a855f7; font-family:'JetBrains Mono', monospace; font-size:0.9rem;">ryedzoffc@gmail.com</div>
-          </div>
-          <div style="border-top:1px solid var(--border-subtle); padding-top:20px; margin-bottom:24px;">
-            <div style="font-weight:700; color:#fff; margin-bottom:8px;">Database Status</div>
-            <div style="color:#34d399; font-size:0.9rem;">✓ Firestore & Local Vault Synchronized</div>
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="resetToInitialSeed()">Reset Platform to Default Seed</button>
-        </div>
-      </section>
-
-    </main>
-  </div>
-
-  <!-- Rejection Modal -->
-  <div class="modal-backdrop" id="reject-modal">
-    <div class="glass modal-box">
-      <h3 style="font-size:1.25rem; font-weight:700; color:#fff; margin-bottom:12px;">Reject Prompt Submission</h3>
-      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">Provide a specific constructive reason to the creator so they can revise and re-submit.</p>
-      <input type="hidden" id="reject-prompt-id" />
-      <textarea id="reject-reason" class="glass-input" required style="height:120px; margin-bottom:18px;" placeholder="e.g. Prompt instructions are too ambiguous or lack output format specifications."></textarea>
-      <div style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-secondary btn-sm" onclick="closeRejectModal()">Cancel</button>
-        <button class="btn btn-danger btn-sm" onclick="confirmRejectPrompt()">Confirm Rejection</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </form>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- Prompt Inspect/Edit Modal for Developer -->
-  <div class="modal-backdrop" id="dev-prompt-modal">
-    <div class="glass modal-box" style="max-width:720px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="color:#fff; font-size:1.25rem; font-weight:800;">Inspect & Edit Prompt</h3>
-        <button onclick="closeDevPromptModal()" class="btn btn-secondary btn-sm" style="padding:4px 8px;">✕</button>
+    <!-- CONTENT -->
+    <section class="dev-view" id="view-content">
+      <div class="top-header">
+        <div>
+          <h1 class="page-title">Website Content</h1>
+          <p class="page-subtitle">Customize landing page.</p>
+        </div>
       </div>
-      <form onsubmit="handleDevSavePrompt(event)">
-        <input type="hidden" id="dev-edit-id" />
-        <div style="margin-bottom:14px;">
-          <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Title</label>
-          <input type="text" id="dev-edit-title" required class="glass-input" />
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-          <div>
-            <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">AI Model</label>
-            <select id="dev-edit-ai" class="glass-input">
-              <option value="ChatGPT">1. ChatGPT</option>
-              <option value="Google Gemini">2. Google Gemini</option>
-              <option value="Claude">3. Claude</option>
-              <option value="DeepSeek">4. DeepSeek</option>
-              <option value="Microsoft Copilot">5. Microsoft Copilot</option>
-              <option value="Meta AI">6. Meta AI</option>
-              <option value="Grok">7. Grok</option>
-              <option value="Perplexity AI">8. Perplexity AI</option>
-              <option value="Mistral AI">9. Mistral AI</option>
-              <option value="Qwen AI">10. Qwen AI</option>
-              <option value="Kimi AI">11. Kimi AI</option>
-              <option value="Character.AI">12. Character.AI</option>
-              <option value="Poe AI">13. Poe AI</option>
-              <option value="HuggingChat">14. HuggingChat</option>
-              <option value="Pi AI">15. Pi AI</option>
-              <option value="Le Chat">16. Le Chat</option>
-              <option value="Amazon Q">17. Amazon Q</option>
-              <option value="GitHub Copilot">18. GitHub Copilot</option>
-              <option value="Phind AI">19. Phind AI</option>
-              <option value="You.com AI">20. You.com AI</option>
-              <option value="Z.ai">21. Z.ai</option>
-              <option value="ERNIE Bot">22. ERNIE Bot</option>
-              <option value="Doubao AI">23. Doubao AI</option>
-              <option value="Tencent Yuanbao">24. Tencent Yuanbao</option>
-              <option value="AI Studio">25. AI Studio</option>
-            </select>
+      <div class="glass" style="max-width:680px;padding:24px;">
+        <form onsubmit="handleSaveContent(event)">
+          <div class="form-group">
+            <label class="form-label">Hero Title</label>
+            <input type="text" id="content-hero-title" class="glass-input" />
           </div>
-          <div>
-            <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Status</label>
-            <select id="dev-edit-status" class="glass-input">
-              <option value="published">Published</option>
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
-            </select>
+          <div class="form-group">
+            <label class="form-label">Hero Subtitle</label>
+            <textarea id="content-hero-desc" class="glass-input" style="height:100px;"></textarea>
           </div>
-        </div>
-        <div style="margin-bottom:18px;">
-          <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Prompt Instructions Content</label>
-          <textarea id="dev-edit-content" required class="glass-input" style="height:180px; font-family:'JetBrains Mono', monospace; font-size:0.88rem;"></textarea>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="copyDevPromptContent()">Copy Content</button>
-          <div style="display:flex; gap:10px;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="closeDevPromptModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+          <div class="form-group">
+            <label class="form-label">Footer Text</label>
+            <input type="text" id="content-footer-text" class="glass-input" />
           </div>
-        </div>
-      </form>
-    </div>
-  </div>
+          <button type="submit" class="btn btn-primary">Publish</button>
+        </form>
+      </div>
+    </section>
 
-  <!-- Add Category Modal -->
-  <div class="modal-backdrop" id="add-category-modal">
-    <div class="glass modal-box">
-      <h3 style="font-size:1.25rem; font-weight:700; color:#fff; margin-bottom:16px;">Add New Category</h3>
-      <form onsubmit="handleCreateCategory(event)">
-        <div style="margin-bottom:16px;">
-          <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Category Name</label>
-          <input type="text" id="new-cat-name" required class="glass-input" placeholder="e.g. Data Science & ML" />
+    <!-- AUDIT -->
+    <section class="dev-view" id="view-audit">
+      <div class="top-header">
+        <div>
+          <h1 class="page-title">Audit Logs</h1>
+          <p class="page-subtitle">All actions logged.</p>
         </div>
+        <button class="btn btn-secondary btn-sm" onclick="loadAuditLogs()">Refresh</button>
+      </div>
+      <div class="glass table-container">
+        <table>
+          <thead><tr><th>Action</th><th>Details</th><th>Actor</th><th>Time</th></tr></thead>
+          <tbody id="audit-logs-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="dev-view" id="view-settings">
+      <div class="top-header">
+        <div>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Export & reset.</p>
+        </div>
+      </div>
+      <div class="glass" style="max-width:600px;padding:24px;">
         <div style="margin-bottom:20px;">
-          <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Keywords Rule (comma separated)</label>
-          <input type="text" id="new-cat-keywords" required class="glass-input" placeholder="e.g. python, pandas, neural, pytorch" />
+          <div style="font-weight:700;color:var(--text-primary);margin-bottom:4px;">Super Developer</div>
+          <div style="color:#c084fc;font-family:var(--font-mono);font-size:0.9rem;">ryedzoffc@gmail.com</div>
         </div>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="closeAddCategoryModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-sm">Create Category</button>
+        <div style="border-top:1px solid var(--glass-border);padding-top:20px;margin-bottom:24px;">
+          <div style="font-weight:700;color:var(--text-primary);margin-bottom:8px;">Database</div>
+          <div style="color:#6ee7b7;font-size:0.9rem;">✓ Local Vault Synchronized</div>
         </div>
-      </form>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="exportData()">Export JSON</button>
+          <button class="btn btn-danger btn-sm" onclick="resetToInitialSeed()">Reset Platform</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- REJECT MODAL -->
+<div class="modal-backdrop" id="reject-modal">
+  <div class="modal-box">
+    <h3 class="modal-title" style="margin-bottom:12px;">Reject Prompt</h3>
+    <input type="hidden" id="reject-prompt-id" />
+    <textarea id="reject-reason" class="glass-input" required style="height:120px;margin-bottom:16px;" placeholder="Alasan reject..."></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button class="btn btn-secondary btn-sm" onclick="closeRejectModal()">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmRejectPrompt()">Reject</button>
     </div>
   </div>
+</div>
 
-  <!-- Create Announcement Modal -->
-  <div class="modal-backdrop" id="create-announcement-modal">
-    <div class="glass modal-box">
-      <h3 style="font-size:1.25rem; font-weight:700; color:#fff; margin-bottom:16px;">New Announcement</h3>
-      <form onsubmit="handleCreateAnnouncement(event)">
-        <div style="margin-bottom:14px;">
-          <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Title</label>
-          <input type="text" id="new-ann-title" required class="glass-input" placeholder="e.g. Scheduled System Upgrade" />
-        </div>
-        <div style="margin-bottom:14px;">
-          <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Type</label>
-          <select id="new-ann-type" class="glass-input">
-            <option value="Update">Update / Release</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Notice">Notice</option>
-            <option value="Security">Security</option>
-          </select>
-        </div>
-        <div style="margin-bottom:20px;">
-          <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Message</label>
-          <textarea id="new-ann-message" required class="glass-input" style="height:100px;" placeholder="Announcement details..."></textarea>
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="closeCreateAnnouncementModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-sm">Publish Announcement</button>
-        </div>
-      </form>
-    </div>
-  </div>
+<script src="ryedz-core.js"></script>
+<script>
+  'use strict';
+  const R = window.Ryedz;
+  let currentUser = null;
 
-  <!-- Create Banner Modal -->
-  <div class="modal-backdrop" id="create-banner-modal">
-    <div class="glass modal-box">
-      <h3 style="font-size:1.25rem; font-weight:700; color:#fff; margin-bottom:16px;">Create Top Banner</h3>
-      <form onsubmit="handleCreateBanner(event)">
-        <div style="margin-bottom:14px;">
-          <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Banner Title</label>
-          <input type="text" id="new-banner-title" required class="glass-input" placeholder="e.g. 🔥 RYEDZ PROMPT VAULT 25 AI Models Available" />
-        </div>
-        <div style="margin-bottom:20px;">
-          <label style="font-size:0.85rem; font-weight:700; color:#fff; display:block; margin-bottom:6px;">Description (Optional)</label>
-          <textarea id="new-banner-desc" class="glass-input" style="height:80px;" placeholder="Brief details shown on large screens..."></textarea>
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="closeCreateBannerModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-sm">Add Active Banner</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="toast-container" id="toast-container"></div>
-
-  <script>
-    function escapeXml(unsafe) {
-      if (!unsafe) return '';
-      return String(unsafe).replace(/[<>&'"]/g, function (c) {
-        switch (c) {
-          case '<': return '&lt;';
-          case '>': return '&gt;';
-          case '&': return '&amp;';
-          case '\'': return '&apos;';
-          case '"': return '&quot;';
-        }
-      });
+  function initDev() {
+    const sess = R.getSessionUser();
+    if (!sess || (sess.role !== 'developer' && sess.email !== 'ryedzoffc@gmail.com')) {
+      document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
+          <div class="glass" style="max-width:420px;padding:36px;text-align:center;border-radius:20px;">
+            <div style="width:60px;height:60px;border-radius:16px;background:var(--accent-primary-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:#c084fc;font-size:1.8rem;">🛡</div>
+            <h2 style="color:var(--text-primary);font-size:1.3rem;font-weight:800;margin-bottom:10px;">Developer Area</h2>
+            <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:24px;">Hanya Super Developer.</p>
+            <a href="index.html" class="btn btn-primary">Ke Login</a>
+          </div>
+        </div>`;
+      return;
     }
+    currentUser = sess;
+    document.getElementById('dev-email-badge').textContent = currentUser.email;
+    refreshAllData();
+  }
 
-    function generateDeterministicThumbnail(id, title, aiModel = 'ChatGPT') {
-      const safeId = id || 'ryedz-vault';
-      let hash = 0;
-      for (let i = 0; i < (safeId + title).length; i++) {
-        hash = ((hash << 5) - hash) + (safeId + title).charCodeAt(i);
-        hash |= 0;
-      }
-      hash = Math.abs(hash);
+  function switchTab(name) {
+    document.querySelectorAll('.dev-view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const v = document.getElementById('view-' + name);
+    const n = document.getElementById('nav-' + name);
+    if (v) v.classList.add('active');
+    if (n) n.classList.add('active');
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+  }
 
-      const colorPairs = [
-        { c1: '#8b5cf6', c2: '#38bdf8', bg1: '#0e101a', bg2: '#07080c' },
-        { c1: '#ec4899', c2: '#8b5cf6', bg1: '#120d1c', bg2: '#06060a' },
-        { c1: '#06b6d4', c2: '#3b82f6', bg1: '#09131d', bg2: '#05070a' }
-      ];
-      const palette = colorPairs[hash % colorPairs.length];
-      const cleanTitle = (title || 'AI PROMPT').trim();
-      const displayTitle = cleanTitle.length > 36 ? cleanTitle.substring(0, 33) + '...' : cleanTitle;
-      const safeEscapedTitle = escapeXml(displayTitle);
-      const safeAi = escapeXml(aiModel || 'ChatGPT');
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('active');
+  }
 
-      const svgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="100%" height="100%">
-        <defs>
-          <linearGradient id="bg_${hash}" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="${palette.bg1}"/>
-            <stop offset="100%" stop-color="${palette.bg2}"/>
-          </linearGradient>
-          <linearGradient id="ac_${hash}" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="${palette.c1}"/>
-            <stop offset="100%" stop-color="${palette.c2}"/>
-          </linearGradient>
-        </defs>
-        <rect width="640" height="360" fill="url(#bg_${hash})"/>
-        <circle cx="150" cy="110" r="150" fill="${palette.c1}" opacity="0.3"/>
-        <circle cx="480" cy="220" r="170" fill="${palette.c2}" opacity="0.25"/>
-        <rect x="40" y="40" width="560" height="280" rx="16" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)"/>
-        <rect x="65" y="65" width="130" height="26" rx="13" fill="rgba(255,255,255,0.06)" stroke="url(#ac_${hash})"/>
-        <text x="130" y="82" fill="#c084fc" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="700" text-anchor="middle">RYEDZ DEV</text>
-        <rect x="205" y="65" width="150" height="26" rx="13" fill="rgba(168,85,247,0.15)" stroke="rgba(168,85,247,0.4)"/>
-        <text x="280" y="82" fill="#c084fc" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="700" text-anchor="middle">🤖 ${safeAi}</text>
-        <text x="65" y="165" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-size="25" font-weight="800">${safeEscapedTitle}</text>
-        <rect x="65" y="250" width="280" height="4" rx="2" fill="url(#ac_${hash})"/>
-      </svg>`;
+  function refreshAllData() {
+    const prompts = R.getLocalData('prompts', []);
+    const users = R.getLocalData('users', []);
+    const pending = prompts.filter(p => p.status === 'pending');
+    const published = prompts.filter(p => p.status === 'published');
+    const rejected = prompts.filter(p => p.status === 'rejected');
+    const admins = users.filter(u => u.role === 'admin');
 
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
+    document.getElementById('stat-users').textContent = users.length;
+    document.getElementById('stat-prompts').textContent = prompts.length;
+    document.getElementById('stat-published').textContent = published.length;
+    document.getElementById('stat-pending').textContent = pending.length;
+    document.getElementById('stat-rejected').textContent = rejected.length;
+    document.getElementById('stat-admins').textContent = admins.length;
+    document.getElementById('badge-pending-count').textContent = pending.length;
+
+    renderQuickPending();
+    renderAllPromptsTable();
+    renderPendingQueue();
+    renderUsersTable();
+    renderAdminsTable();
+    loadAuditLogs();
+    loadMaintenanceSettings();
+    loadContentSettings();
+  }
+
+  function renderQuickPending() {
+    const prompts = R.getLocalData('prompts', []);
+    const pending = prompts.filter(p => p.status === 'pending');
+    const el = document.getElementById('quick-pending-list');
+    if (pending.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-tertiary);font-size:0.85rem;">All clear ✓</div>';
+      return;
     }
+    el.innerHTML = pending.slice(0, 3).map(p => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--glass-border-light);gap:8px;">
+        <div style="min-width:0;flex:1;">
+          <div style="font-weight:600;color:var(--text-primary);font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${R.escapeXml(p.title)}</div>
+          <div style="font-size:0.72rem;color:var(--text-tertiary);">${R.escapeXml(p.aiModel || 'ChatGPT')}</div>
+        </div>
+        <button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓</button>
+      </div>
+    `).join('');
+  }
 
-    function getLocalData(key, fallback) {
-      try {
-        const val = localStorage.getItem('RYEDZ_' + key);
-        return val ? JSON.parse(val) : fallback;
-      } catch (e) { return fallback; }
+  function renderPendingQueue() {
+    const prompts = R.getLocalData('prompts', []);
+    const pending = prompts.filter(p => p.status === 'pending');
+    const container = document.getElementById('pending-queue-container');
+    if (pending.length === 0) {
+      container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;color:var(--text-secondary);">Queue empty! ✓</div>';
+      return;
     }
-    function setLocalData(key, val) {
-      try { localStorage.setItem('RYEDZ_' + key, JSON.stringify(val)); } catch (e) {}
-    }
-
-    let currentUser = null;
-
-    function toggleSidebar() {
-      const sb = document.getElementById('dev-sidebar');
-      const ov = document.getElementById('sidebar-overlay');
-      sb.classList.toggle('open');
-      ov.classList.toggle('active');
-    }
-
-    function initDevCenter() {
-      let sessionUser = getLocalData('session_user', null);
-      if (!sessionUser || (sessionUser.role !== 'developer' && sessionUser.email !== 'ryedzoffc@gmail.com')) {
-        document.body.innerHTML = `
-          <div style="min-height:100vh; width:100%; display:flex; align-items:center; justify-content:center; background:#050609; color:#fff; font-family:'Plus Jakarta Sans', sans-serif; text-align:center; padding:24px;">
-            <div style="max-width:460px; padding:36px; background:rgba(22, 26, 42, 0.85); backdrop-filter:blur(20px); border:1px solid rgba(244,63,94,0.3); border-radius:20px; box-shadow:0 15px 35px rgba(0,0,0,0.6);">
-              <div style="width:60px; height:60px; border-radius:16px; background:rgba(244,63,94,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:#fda4af; font-size:1.8rem;">
-                🛡️
-              </div>
-              <h2 style="color:#ffffff; font-size:1.4rem; font-weight:800; margin-bottom:10px;">Developer Area Restricted</h2>
-              <p style="color:#94a3b8; font-size:0.9rem; line-height:1.6; margin-bottom:24px;">Halaman Developer Control Center hanya dapat diakses oleh Super Developer terverifikasi (ryedzoffc@gmail.com).</p>
-              <div style="display:flex; flex-direction:column; gap:12px;">
-                <button onclick="handleDevDirectLogin()" style="display:inline-block; padding:12px 24px; background:linear-gradient(135deg, #a855f7, #6366f1); color:#fff; border:none; border-radius:12px; font-weight:700; font-size:0.9rem; cursor:pointer;">
-                  Masuk Sebagai Super Developer
-                </button>
-                <a href="index.html" style="display:inline-block; padding:11px 24px; background:rgba(255,255,255,0.06); color:#cbd5e1; text-decoration:none; border-radius:12px; font-weight:600; font-size:0.9rem;">
-                  Kembali ke Beranda
-                </a>
-              </div>
+    container.innerHTML = pending.map(p => `
+      <div class="glass" style="padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
+          <div style="min-width:0;flex:1;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+              <span class="badge badge-amber">PENDING</span>
+              <span class="badge badge-ai">${R.escapeXml(p.aiModel || 'ChatGPT')}</span>
             </div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:var(--text-primary);margin-bottom:4px;">${R.escapeXml(p.title)}</h3>
+            <div style="font-size:0.78rem;color:var(--text-tertiary);">By ${R.escapeXml(p.ownerEmail || 'User')} • ${R.formatDateTime(p.createdAt)}</div>
           </div>
-        `;
-        return;
-      }
-
-      currentUser = sessionUser;
-      document.getElementById('dev-email-badge').textContent = currentUser.email;
-
-      refreshAllData();
-    }
-
-    function handleDevDirectLogin() {
-      const email = prompt('Masukkan Email Super Developer:', 'ryedzoffc@gmail.com');
-      if (!email) return;
-
-      const devUser = {
-        uid: 'dev-master',
-        email: email,
-        displayName: 'Ryedz Developer',
-        role: 'developer',
-        createdAt: Date.now()
-      };
-      setLocalData('session_user', devUser);
-
-      // Save into users list
-      const users = getLocalData('users', []);
-      const existing = users.find(u => u.email === email);
-      if (existing) {
-        existing.role = 'developer';
-      } else {
-        users.push(devUser);
-      }
-      setLocalData('users', users);
-
-      window.location.reload();
-    }
-
-    function switchTab(name) {
-      document.querySelectorAll('.dev-view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      const view = document.getElementById('view-' + name);
-      const nav = document.getElementById('nav-' + name);
-      if (view) view.classList.add('active');
-      if (nav) nav.classList.add('active');
-
-      // Close mobile sidebar
-      const sb = document.getElementById('dev-sidebar');
-      const ov = document.getElementById('sidebar-overlay');
-      if (sb) sb.classList.remove('open');
-      if (ov) ov.classList.remove('active');
-    }
-
-    function refreshAllData() {
-      const prompts = getLocalData('prompts', []);
-      const users = getLocalData('users', [
-        { uid: 'dev-master', email: 'ryedzoffc@gmail.com', displayName: 'Ryedz Offc', role: 'developer', status: 'active', createdAt: Date.now() - 3600000*24 }
-      ]);
-      const admins = users.filter(u => u.role === 'admin');
-      const pending = prompts.filter(p => p.status === 'pending');
-      const published = prompts.filter(p => p.status === 'published');
-      const rejected = prompts.filter(p => p.status === 'rejected');
-
-      document.getElementById('stat-dev-users').textContent = users.length || 1;
-      document.getElementById('stat-dev-prompts').textContent = prompts.length;
-      document.getElementById('stat-dev-published').textContent = published.length;
-      document.getElementById('stat-dev-pending').textContent = pending.length;
-      document.getElementById('stat-dev-rejected').textContent = rejected.length;
-      document.getElementById('stat-dev-admins').textContent = admins.length;
-      document.getElementById('badge-pending-count').textContent = pending.length;
-
-      // Analytics calculation
-      const totalDecided = published.length + rejected.length;
-      const appRate = totalDecided > 0 ? Math.round((published.length / totalDecided) * 100) : 100;
-      const rejRate = totalDecided > 0 ? Math.round((rejected.length / totalDecided) * 100) : 0;
-      document.getElementById('analytics-approval-rate').textContent = appRate + '%';
-      document.getElementById('analytics-rejection-rate').textContent = rejRate + '%';
-
-      renderPendingQueue();
-      renderAllPromptsTable();
-      renderCategoriesTable();
-      renderUsersTable();
-      renderAdminsTable();
-      renderAnnouncements();
-      renderBanners();
-      loadAuditLogs();
-      loadMaintenanceSettings();
-    }
-
-    // ==========================================
-    // MODERATION (APPROVE & REJECT)
-    // ==========================================
-    function renderPendingQueue() {
-      const prompts = getLocalData('prompts', []);
-      const pending = prompts.filter(p => p.status === 'pending');
-      const container = document.getElementById('pending-queue-container');
-      const quickList = document.getElementById('quick-pending-list');
-
-      if (pending.length === 0) {
-        container.innerHTML = '<div class="glass" style="padding:40px; text-align:center; color:var(--text-muted);">Queue empty! All submitted prompts have been moderated.</div>';
-        quickList.innerHTML = '<div style="color:var(--text-subtle); padding:10px 0;">All clear. No pending approvals.</div>';
-        return;
-      }
-
-      quickList.innerHTML = pending.slice(0, 3).map(p => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-          <div>
-            <div style="font-weight:700; color:#fff; font-size:0.9rem;">${escapeXml(p.title)}</div>
-            <div style="font-size:0.75rem; color:var(--text-subtle);">🤖 ${escapeXml(p.aiModel || 'ChatGPT')} • By ${escapeXml(p.ownerEmail || 'User')}</div>
-          </div>
-          <button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">Approve</button>
-        </div>
-      `).join('');
-
-      container.innerHTML = pending.map(p => `
-        <div class="glass" style="padding:24px;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; flex-wrap:wrap; gap:12px;">
-            <div>
-              <div style="display:flex; gap:8px; align-items:center;">
-                <span class="badge badge-pending">PENDING APPROVAL</span>
-                <span class="badge badge-ai">🤖 ${escapeXml(p.aiModel || 'ChatGPT')}</span>
-              </div>
-              <h3 style="font-size:1.25rem; font-weight:800; color:#fff; margin-top:6px;">${escapeXml(p.title)}</h3>
-              <div style="font-size:0.8rem; color:var(--text-subtle); margin-top:2px;">Submitted by ${escapeXml(p.ownerEmail || 'User')} • ${new Date(p.createdAt || Date.now()).toLocaleString()}</div>
-            </div>
-            <div style="display:flex; gap:10px;">
-              <button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓ Approve & Publish</button>
-              <button class="btn btn-danger btn-sm" onclick="openRejectModal('${p.id}')">✕ Reject with Reason</button>
-            </div>
-          </div>
-          <div style="background:rgba(10,12,18,0.7); border:1px solid var(--border-subtle); border-radius:12px; padding:16px; margin-bottom:14px;">
-            <div style="font-size:0.75rem; font-weight:700; color:var(--text-subtle); margin-bottom:6px;">PROMPT INSTRUCTIONS:</div>
-            <pre style="white-space:pre-wrap; font-family:'JetBrains Mono', monospace; font-size:0.88rem; color:#f1f5f9; line-height:1.5;">${escapeXml(p.content)}</pre>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓ Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="openRejectModal('${p.id}')">✕ Reject</button>
           </div>
         </div>
-      `).join('');
+        <pre style="white-space:pre-wrap;font-family:var(--font-mono);font-size:0.85rem;color:var(--text-primary);line-height:1.5;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:10px;padding:14px;max-height:200px;overflow-y:auto;">${R.escapeXml(p.content)}</pre>
+      </div>
+    `).join('');
+  }
+
+  function approvePrompt(id) {
+    const prompts = R.getLocalData('prompts', []);
+    const p = prompts.find(x => x.id === id);
+    if (!p) return;
+    p.status = 'published';
+    p.publishedAt = Date.now();
+    delete p.moderationReason;
+    R.setLocalData('prompts', prompts);
+    R.addAuditLog('PROMPT_APPROVED', 'Approved "' + p.title + '"', currentUser);
+    R.showToast('Approved & published!', 'success');
+    refreshAllData();
+  }
+
+  function openRejectModal(id) {
+    document.getElementById('reject-prompt-id').value = id;
+    document.getElementById('reject-reason').value = '';
+    document.getElementById('reject-modal').classList.add('active');
+  }
+  function closeRejectModal() {
+    document.getElementById('reject-modal').classList.remove('active');
+  }
+
+  function confirmRejectPrompt() {
+    const id = document.getElementById('reject-prompt-id').value;
+    const reason = document.getElementById('reject-reason').value.trim();
+    if (!reason) { R.showToast('Reason required.', 'error'); return; }
+    const prompts = R.getLocalData('prompts', []);
+    const p = prompts.find(x => x.id === id);
+    if (!p) return;
+    p.status = 'rejected';
+    p.moderationReason = reason;
+    R.setLocalData('prompts', prompts);
+    R.addAuditLog('PROMPT_REJECTED', 'Rejected "' + p.title + '": ' + reason, currentUser);
+    closeRejectModal();
+    R.showToast('Rejected.', 'info');
+    refreshAllData();
+  }
+
+  function renderAllPromptsTable() {
+    const filter = (document.getElementById('filter-prompts-input').value || '').toLowerCase().trim();
+    const ai = document.getElementById('filter-prompts-ai').value || 'all';
+    const prompts = R.getLocalData('prompts', []);
+    const filtered = prompts.filter(p => {
+      const mQ = !filter || ((p.title || '') + ' ' + (p.ownerEmail || '')).toLowerCase().includes(filter);
+      const mAi = ai === 'all' || p.aiModel === ai;
+      return mQ && mAi;
+    });
+    const tbody = document.getElementById('all-prompts-tbody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-tertiary);padding:24px;">No prompts.</td></tr>';
+      return;
     }
-
-    function approvePrompt(id) {
-      let prompts = getLocalData('prompts', []);
-      const index = prompts.findIndex(p => p.id === id);
-      if (index === -1) return;
-
-      prompts[index].status = 'published';
-      prompts[index].publishedAt = Date.now();
-      delete prompts[index].moderationReason;
-      setLocalData('prompts', prompts);
-
-      addAuditLog('PROMPT_APPROVED', `Approved prompt "${prompts[index].title}"`);
-      showToast('Prompt approved and published to Public Vault!', 'success');
-      refreshAllData();
-    }
-
-    function openRejectModal(id) {
-      document.getElementById('reject-prompt-id').value = id;
-      document.getElementById('reject-reason').value = '';
-      document.getElementById('reject-modal').classList.add('active');
-    }
-    function closeRejectModal() {
-      document.getElementById('reject-modal').classList.remove('active');
-    }
-
-    function confirmRejectPrompt() {
-      const id = document.getElementById('reject-prompt-id').value;
-      const reason = document.getElementById('reject-reason').value.trim();
-      if (!reason) {
-        showToast('Please provide a reason for rejection.', 'error');
-        return;
-      }
-
-      let prompts = getLocalData('prompts', []);
-      const index = prompts.findIndex(p => p.id === id);
-      if (index === -1) return;
-
-      prompts[index].status = 'rejected';
-      prompts[index].moderationReason = reason;
-      setLocalData('prompts', prompts);
-
-      addAuditLog('PROMPT_REJECTED', `Rejected "${prompts[index].title}". Reason: ${reason}`);
-      closeRejectModal();
-      showToast('Prompt rejected with feedback sent to owner.', 'info');
-      refreshAllData();
-    }
-
-    // ==========================================
-    // ALL PROMPTS MASTER VIEW
-    // ==========================================
-    function renderAllPromptsTable() {
-      const prompts = getLocalData('prompts', []);
-      const filter = (document.getElementById('filter-prompts-input')?.value || '').toLowerCase().trim();
-      const aiFilter = document.getElementById('filter-prompts-ai')?.value || 'all';
-
-      let filtered = prompts.filter(p => {
-        const matchText = !filter || (p.title + ' ' + (p.ownerEmail||'')).toLowerCase().includes(filter);
-        const matchAi = aiFilter === 'all' || p.aiModel === aiFilter;
-        return matchText && matchAi;
-      });
-
-      const tbody = document.getElementById('all-prompts-tbody');
-      if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-subtle); padding:24px;">No prompts found matching filter.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = filtered.map(p => `
+    tbody.innerHTML = filtered.map(p => {
+      const cls = p.status === 'published' ? 'badge-green' : p.status === 'pending' ? 'badge-amber' : 'badge-red';
+      return `
         <tr>
-          <td>
-            <div style="font-weight:700; color:#fff;">${escapeXml(p.title)}</div>
-          </td>
-          <td><span class="badge badge-ai">${escapeXml(p.aiModel || 'ChatGPT')}</span></td>
-          <td>${escapeXml(p.ownerEmail || 'User')}</td>
-          <td><span class="badge badge-user">${escapeXml(p.category || 'General')}</span></td>
-          <td>
-            <span class="badge ${p.status === 'published' ? 'badge-published' : p.status === 'pending' ? 'badge-pending' : 'badge-rejected'}">
-              ${(p.status || 'pending').toUpperCase()}
-            </span>
-          </td>
-          <td>${new Date(p.createdAt || Date.now()).toLocaleDateString()}</td>
-          <td>
-            <div style="display:flex; gap:6px;">
-              <button class="btn btn-secondary btn-sm" onclick="openDevPromptModal('${p.id}')">Inspect/Edit</button>
-              ${p.status !== 'published' ? `<button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">Approve</button>` : ''}
-              <button class="btn btn-danger btn-sm" onclick="deleteAnyPrompt('${p.id}')">Delete</button>
+          <td data-label="Title"><div style="font-weight:600;color:var(--text-primary);">${R.escapeXml(p.title)}</div></td>
+          <td data-label="AI"><span class="badge badge-ai">${R.escapeXml(p.aiModel || 'ChatGPT')}</span></td>
+          <td data-label="Author">${R.escapeXml(p.ownerEmail || 'User')}</td>
+          <td data-label="Status"><span class="badge ${cls}">${(p.status || 'pending').toUpperCase()}</span></td>
+          <td data-label="Date">${R.formatDate(p.createdAt)}</td>
+          <td data-label="Actions">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              ${p.status !== 'published' ? `<button class="btn btn-success btn-sm" onclick="approvePrompt('${p.id}')">✓</button>` : ''}
+              <button class="btn btn-danger btn-sm" onclick="deleteAnyPrompt('${p.id}')">Del</button>
             </div>
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+    }).join('');
+  }
+
+  function deleteAnyPrompt(id) {
+    if (!confirm('Delete permanently?')) return;
+    let prompts = R.getLocalData('prompts', []);
+    const p = prompts.find(x => x.id === id);
+    prompts = prompts.filter(x => x.id !== id);
+    R.setLocalData('prompts', prompts);
+    R.addAuditLog('PROMPT_DELETED', 'Deleted "' + (p ? p.title : id) + '"', currentUser);
+    R.showToast('Deleted.', 'info');
+    refreshAllData();
+  }
+
+  function renderUsersTable() {
+    const users = R.getLocalData('users', []);
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = users.map(u => {
+      const cls = u.role === 'developer' ? 'badge-dev' : u.role === 'admin' ? 'badge-admin' : 'badge-user';
+      return `
+        <tr>
+          <td data-label="User">
+            <div style="font-weight:600;color:var(--text-primary);">${R.escapeXml(u.displayName || u.email.split('@')[0])}</div>
+            <div style="font-size:0.75rem;color:var(--text-tertiary);">${R.escapeXml(u.email)}</div>
+          </td>
+          <td data-label="Role"><span class="badge ${cls}">${(u.role || 'user').toUpperCase()}</span></td>
+          <td data-label="Joined">${R.formatDate(u.createdAt)}</td>
+          <td data-label="Action">
+            ${u.role !== 'developer' ? `<button class="btn btn-secondary btn-sm" onclick="toggleUserRole('${u.uid}')">Toggle</button>` : '<span style="color:var(--text-tertiary);font-size:0.75rem;">Super Dev</span>'}
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  function renderAdminsTable() {
+    const users = R.getLocalData('users', []);
+    const admins = users.filter(u => u.role === 'admin');
+    const tbody = document.getElementById('admins-tbody');
+    if (admins.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-tertiary);padding:20px;">No admins yet.</td></tr>';
+      return;
     }
+    tbody.innerHTML = admins.map(a => `
+      <tr>
+        <td data-label="Email">${R.escapeXml(a.email)}</td>
+        <td data-label="Name">${R.escapeXml(a.displayName || a.email.split('@')[0])}</td>
+        <td data-label="Actions"><button class="btn btn-danger btn-sm" onclick="demoteAdmin('${a.uid}')">Revoke</button></td>
+      </tr>
+    `).join('');
+  }
 
-    let activeDevInspectPrompt = null;
+  function promoteToAdmin() {
+    const email = document.getElementById('promote-email-input').value.trim();
+    if (!email) return;
+    const users = R.getLocalData('users', []);
+    let u = users.find(x => x.email === email);
+    if (!u) {
+      u = { uid: 'user-' + Date.now(), email, displayName: email.split('@')[0], role: 'admin', createdAt: Date.now() };
+      users.push(u);
+    } else u.role = 'admin';
+    R.setLocalData('users', users);
+    R.addAuditLog('ROLE_PROMOTED', 'Promoted ' + email, currentUser);
+    R.showToast(email + ' is now Admin!', 'success');
+    document.getElementById('promote-email-input').value = '';
+    refreshAllData();
+  }
 
-    function openDevPromptModal(id) {
-      const prompts = getLocalData('prompts', []);
-      const p = prompts.find(item => item.id === id);
-      if (!p) return;
-      activeDevInspectPrompt = p;
-
-      document.getElementById('dev-edit-id').value = p.id;
-      document.getElementById('dev-edit-title').value = p.title;
-      document.getElementById('dev-edit-ai').value = p.aiModel || 'ChatGPT';
-      document.getElementById('dev-edit-status').value = p.status || 'published';
-      document.getElementById('dev-edit-content').value = p.content;
-
-      document.getElementById('dev-prompt-modal').classList.add('active');
-    }
-
-    function closeDevPromptModal() {
-      document.getElementById('dev-prompt-modal').classList.remove('active');
-      activeDevInspectPrompt = null;
-    }
-
-    function handleDevSavePrompt(e) {
-      e.preventDefault();
-      const id = document.getElementById('dev-edit-id').value;
-      const title = document.getElementById('dev-edit-title').value.trim();
-      const aiModel = document.getElementById('dev-edit-ai').value;
-      const status = document.getElementById('dev-edit-status').value;
-      const content = document.getElementById('dev-edit-content').value.trim();
-
-      let prompts = getLocalData('prompts', []);
-      const index = prompts.findIndex(p => p.id === id);
-      if (index === -1) return;
-
-      prompts[index].title = title;
-      prompts[index].aiModel = aiModel;
-      prompts[index].status = status;
-      prompts[index].content = content;
-      prompts[index].updatedAt = Date.now();
-
-      setLocalData('prompts', prompts);
-      addAuditLog('PROMPT_EDITED', `Developer edited prompt "${title}"`);
-      showToast('Prompt successfully updated!', 'success');
-      closeDevPromptModal();
+  function demoteAdmin(uid) {
+    const users = R.getLocalData('users', []);
+    const u = users.find(x => x.uid === uid);
+    if (u) {
+      u.role = 'user';
+      R.setLocalData('users', users);
+      R.addAuditLog('ROLE_DEMOTED', 'Demoted ' + u.email, currentUser);
+      R.showToast('Demoted.', 'info');
       refreshAllData();
     }
+  }
 
-    async function copyDevPromptContent() {
-      const content = document.getElementById('dev-edit-content').value;
-      if (!content) return;
-      try {
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(content);
-          showToast('Prompt copied to clipboard!', 'success');
-        }
-      } catch (e) {
-        showToast('Selected for manual copy.', 'info');
-      }
-    }
-
-    function deleteAnyPrompt(id) {
-      if (!confirm('Are you sure you want to permanently delete this prompt?')) return;
-      let prompts = getLocalData('prompts', []);
-      const target = prompts.find(p => p.id === id);
-      prompts = prompts.filter(p => p.id !== id);
-      setLocalData('prompts', prompts);
-      addAuditLog('PROMPT_DELETED', `Developer deleted prompt "${target ? target.title : id}"`);
-      showToast('Prompt permanently removed.', 'info');
+  function toggleUserRole(uid) {
+    const users = R.getLocalData('users', []);
+    const u = users.find(x => x.uid === uid);
+    if (u) {
+      u.role = u.role === 'admin' ? 'user' : 'admin';
+      R.setLocalData('users', users);
+      R.addAuditLog('ROLE_CHANGED', 'Toggled ' + u.email + ' to ' + u.role, currentUser);
+      R.showToast('Role: ' + u.role.toUpperCase(), 'success');
       refreshAllData();
     }
+  }
 
-    // ==========================================
-    // CATEGORIES MANAGEMENT
-    // ==========================================
-    function renderCategoriesTable() {
-      const categories = getLocalData('categories', [
-        { id: 'c1', name: 'Coding & Dev', keywords: 'code, javascript, python, rust, docker, api, sql' },
-        { id: 'c2', name: 'Creative AI', keywords: 'art, image, story, poetry, video, audio' },
-        { id: 'c3', name: 'Marketing', keywords: 'seo, copywriting, ads, email, social, conversion' },
-        { id: 'c4', name: 'Writing & Copy', keywords: 'article, blog, resume, academic, summary' },
-        { id: 'c5', name: 'Admin Verified', keywords: 'architecture, enterprise, secure, verified' }
-      ]);
+  function loadMaintenanceSettings() {
+    const st = R.getLocalData('website_settings', {});
+    const m = st.maintenance || {};
+    document.getElementById('maint-mode-select').value = m.mode || 'NORMAL';
+    document.getElementById('maint-title-input').value = m.title || '';
+    document.getElementById('maint-desc-input').value = m.desc || '';
+    document.getElementById('maint-reason-input').value = m.reason || '';
+    document.getElementById('maint-active-checkbox').checked = !!m.active;
+    const indicator = document.getElementById('maint-indicator');
+    indicator.className = 'status-dot ' + (m.active ? 'inactive' : 'active');
+    if (m.active) indicator.style.background = '#f59e0b';
+  }
 
-      const prompts = getLocalData('prompts', []);
-      const tbody = document.getElementById('categories-tbody');
-      tbody.innerHTML = categories.map(c => {
-        const count = prompts.filter(p => p.category === c.name).length;
-        return `
-          <tr>
-            <td><span class="badge badge-user">${escapeXml(c.name)}</span></td>
-            <td><code style="color:var(--text-muted); font-size:0.8rem;">${escapeXml(c.keywords)}</code></td>
-            <td><strong>${count}</strong></td>
-            <td>
-              <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">Delete</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+  function handleSaveMaintenance(e) {
+    e.preventDefault();
+    const st = R.getLocalData('website_settings', {});
+    st.maintenance = {
+      mode: document.getElementById('maint-mode-select').value,
+      title: document.getElementById('maint-title-input').value.trim(),
+      desc: document.getElementById('maint-desc-input').value.trim(),
+      reason: document.getElementById('maint-reason-input').value.trim(),
+      active: document.getElementById('maint-active-checkbox').checked,
+      updatedAt: Date.now()
+    };
+    R.setLocalData('website_settings', st);
+    R.addAuditLog('MAINTENANCE_TOGGLED', st.maintenance.mode + ' active=' + st.maintenance.active, currentUser);
+    R.showToast('Maintenance saved!', 'success');
+    loadMaintenanceSettings();
+  }
+
+  function loadContentSettings() {
+    const st = R.getLocalData('website_settings', {});
+    document.getElementById('content-hero-title').value = st.heroTitle || '';
+    document.getElementById('content-hero-desc').value = st.heroDesc || '';
+    document.getElementById('content-footer-text').value = st.footerText || '';
+  }
+
+  function handleSaveContent(e) {
+    e.preventDefault();
+    const st = R.getLocalData('website_settings', {});
+    st.heroTitle = document.getElementById('content-hero-title').value.trim();
+    st.heroDesc = document.getElementById('content-hero-desc').value.trim();
+    st.footerText = document.getElementById('content-footer-text').value.trim();
+    R.setLocalData('website_settings', st);
+    R.addAuditLog('CONTENT_UPDATED', 'Updated content', currentUser);
+    R.showToast('Content published!', 'success');
+  }
+
+  function loadAuditLogs() {
+    const logs = R.getLocalData('audit_logs', []);
+    const tbody = document.getElementById('audit-logs-tbody');
+    if (logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:20px;">No logs.</td></tr>';
+      return;
     }
+    tbody.innerHTML = logs.slice(0, 50).map(l => `
+      <tr>
+        <td data-label="Action"><span class="badge badge-purple">${R.escapeXml(l.action)}</span></td>
+        <td data-label="Details">${R.escapeXml(l.details)}</td>
+        <td data-label="Actor">${R.escapeXml(l.actorEmail || 'system')}</td>
+        <td data-label="Time" style="font-size:0.78rem;color:var(--text-tertiary);">${R.formatDateTime(l.timestamp)}</td>
+      </tr>
+    `).join('');
 
-    function openAddCategoryModal() {
-      document.getElementById('new-cat-name').value = '';
-      document.getElementById('new-cat-keywords').value = '';
-      document.getElementById('add-category-modal').classList.add('active');
-    }
-    function closeAddCategoryModal() {
-      document.getElementById('add-category-modal').classList.remove('active');
-    }
+    const quick = document.getElementById('quick-audit-list');
+    quick.innerHTML = logs.slice(0, 3).map(l => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--glass-border-light);font-size:0.85rem;">
+        <div style="font-weight:600;color:var(--text-primary);">${R.escapeXml(l.action)}</div>
+        <div style="color:var(--text-secondary);font-size:0.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${R.escapeXml(l.details)}</div>
+      </div>
+    `).join('') || '<div style="color:var(--text-tertiary);font-size:0.85rem;">No activity yet.</div>';
+  }
 
-    function handleCreateCategory(e) {
-      e.preventDefault();
-      const name = document.getElementById('new-cat-name').value.trim();
-      const keywords = document.getElementById('new-cat-keywords').value.trim();
-      if (!name) return;
+  function exportData() {
+    const data = {
+      prompts: R.getLocalData('prompts', []),
+      users: R.getLocalData('users', []),
+      settings: R.getLocalData('website_settings', {}),
+      audit: R.getLocalData('audit_logs', [])
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ryedz-backup-' + Date.now() + '.json';
+    a.click();
+    R.showToast('Backup downloaded.', 'success');
+  }
 
-      const categories = getLocalData('categories', []);
-      categories.push({ id: 'cat-' + Date.now(), name, keywords });
-      setLocalData('categories', categories);
+  function resetToInitialSeed() {
+    if (!confirm('Reset ALL data?')) return;
+    R.clearAllLocalData();
+    R.ensureSeed();
+    R.showToast('Platform reset. Reloading...', 'info');
+    setTimeout(() => window.location.reload(), 800);
+  }
 
-      addAuditLog('CATEGORY_CREATED', `Created category "${name}"`);
-      showToast('Category created successfully!', 'success');
-      closeAddCategoryModal();
-      renderCategoriesTable();
-    }
+  function handleLogout() {
+    R.logout();
+    window.location.href = 'index.html';
+  }
 
-    function deleteCategory(id) {
-      let categories = getLocalData('categories', []);
-      categories = categories.filter(c => c.id !== id);
-      setLocalData('categories', categories);
-      renderCategoriesTable();
-    }
-
-    // ==========================================
-    // USERS & ADMINS
-    // ==========================================
-    function renderUsersTable() {
-      const users = getLocalData('users', [
-        { uid: 'dev-master', email: 'ryedzoffc@gmail.com', displayName: 'Ryedz Offc', role: 'developer', status: 'active', createdAt: Date.now() - 3600000*24 }
-      ]);
-      const tbody = document.getElementById('users-tbody');
-      tbody.innerHTML = users.map(u => `
-        <tr>
-          <td>
-            <div style="font-weight:700; color:#fff;">${escapeXml(u.displayName || u.email.split('@')[0])}</div>
-            <div style="font-size:0.75rem; color:var(--text-subtle);">${escapeXml(u.email)}</div>
-          </td>
-          <td><span class="badge ${u.role === 'developer' ? 'badge-dev' : u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role.toUpperCase()}</span></td>
-          <td><span style="color:#34d399;">Active</span></td>
-          <td>${new Date(u.createdAt || Date.now()).toLocaleDateString()}</td>
-          <td>
-            ${u.role !== 'developer' ? `
-              <button class="btn btn-secondary btn-sm" onclick="toggleUserRole('${u.uid}')">
-                ${u.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
-              </button>
-            ` : '<span style="color:var(--text-subtle); font-size:0.75rem;">Super Dev</span>'}
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    function renderAdminsTable() {
-      const users = getLocalData('users', []);
-      const admins = users.filter(u => u.role === 'admin');
-      const tbody = document.getElementById('admins-tbody');
-      if (admins.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-subtle); padding:20px;">No designated Admins. Use the promote tool above to assign an Admin.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = admins.map(a => `
-        <tr>
-          <td>${escapeXml(a.email)}</td>
-          <td>${escapeXml(a.displayName || a.email.split('@')[0])}</td>
-          <td>${new Date(a.createdAt || Date.now()).toLocaleDateString()}</td>
-          <td>
-            <button class="btn btn-danger btn-sm" onclick="demoteAdmin('${a.uid}')">Revoke Admin</button>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    function promoteToAdmin() {
-      const email = document.getElementById('promote-email-input').value.trim();
-      if (!email) return;
-
-      let users = getLocalData('users', []);
-      let user = users.find(u => u.email === email);
-      if (!user) {
-        user = {
-          uid: 'user-' + Date.now(),
-          email: email,
-          displayName: email.split('@')[0],
-          role: 'admin',
-          createdAt: Date.now()
-        };
-        users.push(user);
-      } else {
-        user.role = 'admin';
-      }
-
-      setLocalData('users', users);
-      addAuditLog('ROLE_PROMOTED', `Granted ADMIN role to ${email}`);
-      showToast(`User ${email} is now an Admin!`, 'success');
-      document.getElementById('promote-email-input').value = '';
-      refreshAllData();
-    }
-
-    function demoteAdmin(uid) {
-      let users = getLocalData('users', []);
-      const user = users.find(u => u.uid === uid);
-      if (user) {
-        user.role = 'user';
-        setLocalData('users', users);
-        addAuditLog('ROLE_DEMOTED', `Demoted Admin ${user.email} to USER`);
-        showToast(`Revoked Admin from ${user.email}`, 'info');
-        refreshAllData();
-      }
-    }
-
-    function toggleUserRole(uid) {
-      let users = getLocalData('users', []);
-      const user = users.find(u => u.uid === uid);
-      if (user) {
-        user.role = (user.role === 'admin') ? 'user' : 'admin';
-        setLocalData('users', users);
-        addAuditLog('ROLE_CHANGED', `Toggled role of ${user.email} to ${user.role}`);
-        showToast(`Role updated to ${user.role.toUpperCase()}`, 'success');
-        refreshAllData();
-      }
-    }
-
-    // ==========================================
-    // MAINTENANCE & WEBSITE CONTENT
-    // ==========================================
-    function loadMaintenanceSettings() {
-      const settings = getLocalData('website_settings', {});
-      const m = settings.maintenance || {};
-      document.getElementById('maint-mode-select').value = m.mode || 'NORMAL';
-      document.getElementById('maint-title-input').value = m.title || 'RYEDZ PROMPT VAULT SEDANG DALAM PEMELIHARAAN';
-      document.getElementById('maint-desc-input').value = m.desc || 'Kami sedang meningkatkan sistem.';
-      document.getElementById('maint-reason-input').value = m.reason || 'Scheduled upgrade';
-      document.getElementById('maint-active-checkbox').checked = !!m.active;
-
-      const indicator = document.getElementById('maint-indicator');
-      indicator.style.background = m.active ? '#f59e0b' : '#10b981';
-    }
-
-    function handleSaveMaintenance(e) {
-      e.preventDefault();
-      const settings = getLocalData('website_settings', {});
-      settings.maintenance = {
-        mode: document.getElementById('maint-mode-select').value,
-        title: document.getElementById('maint-title-input').value.trim(),
-        desc: document.getElementById('maint-desc-input').value.trim(),
-        reason: document.getElementById('maint-reason-input').value.trim(),
-        active: document.getElementById('maint-active-checkbox').checked,
-        updatedAt: Date.now()
-      };
-      setLocalData('website_settings', settings);
-      addAuditLog('MAINTENANCE_TOGGLED', `Maintenance updated to ${settings.maintenance.mode} (Active: ${settings.maintenance.active})`);
-      showToast('Maintenance settings deployed successfully!', 'success');
-      loadMaintenanceSettings();
-    }
-
-    function handleSaveContent(e) {
-      e.preventDefault();
-      const settings = getLocalData('website_settings', {});
-      settings.heroTitle = document.getElementById('content-hero-title').value.trim();
-      settings.heroDesc = document.getElementById('content-hero-desc').value.trim();
-      settings.footerText = document.getElementById('content-footer-text').value.trim();
-      setLocalData('website_settings', settings);
-      addAuditLog('CONTENT_UPDATED', 'Updated website hero and footer content');
-      showToast('Website content updated live!', 'success');
-    }
-
-    // ==========================================
-    // ANNOUNCEMENTS & BANNERS & NOTIFICATIONS
-    // ==========================================
-    function renderAnnouncements() {
-      const ann = getLocalData('announcements', [
-        { id: 'a1', title: 'Website Dalam Masa Peningkatan', message: 'RYEDZ PROMPT VAULT mendukung 25 Model AI generasi terbaru.', type: 'Update', status: 'published', createdAt: Date.now() }
-      ]);
-      const list = document.getElementById('announcements-list');
-      list.innerHTML = ann.map(a => `
-        <div class="glass" style="padding:18px; display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <span class="badge badge-dev">${escapeXml(a.type)}</span>
-            <div style="font-weight:700; color:#fff; font-size:1.05rem; margin-top:4px;">${escapeXml(a.title)}</div>
-            <div style="font-size:0.85rem; color:var(--text-muted);">${escapeXml(a.message)}</div>
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteAnnouncement('${a.id}')">Delete</button>
-        </div>
-      `).join('');
-    }
-
-    function openCreateAnnouncementModal() {
-      document.getElementById('new-ann-title').value = '';
-      document.getElementById('new-ann-message').value = '';
-      document.getElementById('create-announcement-modal').classList.add('active');
-    }
-    function closeCreateAnnouncementModal() {
-      document.getElementById('create-announcement-modal').classList.remove('active');
-    }
-
-    function handleCreateAnnouncement(e) {
-      e.preventDefault();
-      const title = document.getElementById('new-ann-title').value.trim();
-      const type = document.getElementById('new-ann-type').value;
-      const message = document.getElementById('new-ann-message').value.trim();
-
-      const ann = getLocalData('announcements', []);
-      ann.unshift({ id: 'ann-' + Date.now(), title, type, message, createdAt: Date.now() });
-      setLocalData('announcements', ann);
-
-      addAuditLog('ANNOUNCEMENT_CREATED', `Published announcement "${title}"`);
-      showToast('Announcement published successfully!', 'success');
-      closeCreateAnnouncementModal();
-      renderAnnouncements();
-    }
-
-    function deleteAnnouncement(id) {
-      let ann = getLocalData('announcements', []);
-      ann = ann.filter(a => a.id !== id);
-      setLocalData('announcements', ann);
-      renderAnnouncements();
-    }
-
-    function renderBanners() {
-      const banners = getLocalData('banners', [
-        { id: 'b1', title: '🔥 RYEDZ PROMPT VAULT Live', description: 'Experience seamless 25 AI Model selections with real-time vector thumbnails.', isActive: true }
-      ]);
-      const list = document.getElementById('banners-list');
-      list.innerHTML = banners.map(b => `
-        <div class="glass" style="padding:18px; display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <div style="font-weight:700; color:#fff; font-size:1rem;">${escapeXml(b.title)}</div>
-            <div style="font-size:0.85rem; color:var(--text-muted);">${escapeXml(b.description || '')}</div>
-          </div>
-          <div style="display:flex; gap:10px; align-items:center;">
-            <button class="btn btn-secondary btn-sm" onclick="toggleBanner('${b.id}')">${b.isActive ? 'Deactivate' : 'Activate'}</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteBanner('${b.id}')">Delete</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function openCreateBannerModal() {
-      document.getElementById('new-banner-title').value = '';
-      document.getElementById('new-banner-desc').value = '';
-      document.getElementById('create-banner-modal').classList.add('active');
-    }
-    function closeCreateBannerModal() {
-      document.getElementById('create-banner-modal').classList.remove('active');
-    }
-
-    function handleCreateBanner(e) {
-      e.preventDefault();
-      const title = document.getElementById('new-banner-title').value.trim();
-      const description = document.getElementById('new-banner-desc').value.trim();
-
-      const banners = getLocalData('banners', []);
-      banners.unshift({ id: 'ban-' + Date.now(), title, description, isActive: true });
-      setLocalData('banners', banners);
-
-      addAuditLog('BANNER_CREATED', `Created banner "${title}"`);
-      showToast('Top banner activated!', 'success');
-      closeCreateBannerModal();
-      renderBanners();
-    }
-
-    function toggleBanner(id) {
-      let banners = getLocalData('banners', []);
-      const b = banners.find(item => item.id === id);
-      if (b) {
-        b.isActive = !b.isActive;
-        setLocalData('banners', banners);
-        renderBanners();
-      }
-    }
-
-    function deleteBanner(id) {
-      let banners = getLocalData('banners', []);
-      banners = banners.filter(b => b.id !== id);
-      setLocalData('banners', banners);
-      renderBanners();
-    }
-
-    function handleSendNotification(e) {
-      e.preventDefault();
-      const target = document.getElementById('notif-target').value;
-      const title = document.getElementById('notif-title').value.trim();
-      const message = document.getElementById('notif-message').value.trim();
-
-      const newNotif = {
-        id: 'notif-' + Date.now(),
-        title, message, targetAudience: target,
-        createdAt: Date.now(), isRead: false
-      };
-
-      const users = getLocalData('users', []);
-      users.forEach(u => {
-        const userNotifs = getLocalData('notifications_' + u.uid, []);
-        userNotifs.unshift(newNotif);
-        setLocalData('notifications_' + u.uid, userNotifs);
-      });
-
-      addAuditLog('NOTIF_BROADCAST', `Sent notification "${title}" to ${target}`);
-      showToast('Notification broadcast successfully to all recipients!', 'success');
-      document.getElementById('notif-title').value = '';
-      document.getElementById('notif-message').value = '';
-    }
-
-    // ==========================================
-    // AUDIT LOGS
-    // ==========================================
-    function addAuditLog(action, details) {
-      const logs = getLocalData('audit_logs', []);
-      logs.unshift({
-        id: 'aud-' + Date.now(),
-        action: action,
-        details: details,
-        actorUid: currentUser ? currentUser.uid : 'system',
-        actorEmail: currentUser ? currentUser.email : 'developer',
-        timestamp: Date.now()
-      });
-      setLocalData('audit_logs', logs);
-    }
-
-    function loadAuditLogs() {
-      const logs = getLocalData('audit_logs', [
-        { action: 'SYSTEM_BOOTSTRAP', details: 'Initialized RYEDZ PROMPT VAULT Super Glassmorphism Core', actorEmail: 'ryedzoffc@gmail.com', timestamp: Date.now() - 3600000*5 }
-      ]);
-      const tbody = document.getElementById('audit-logs-tbody');
-      tbody.innerHTML = logs.map(l => `
-        <tr>
-          <td><span class="badge badge-dev">${escapeXml(l.action)}</span></td>
-          <td>${escapeXml(l.details)}</td>
-          <td style="color:var(--text-subtle);">${escapeXml(l.actorEmail || 'Dev')}</td>
-          <td style="font-size:0.78rem; color:var(--text-subtle);">${new Date(l.timestamp).toLocaleString()}</td>
-        </tr>
-      `).join('');
-
-      const quick = document.getElementById('quick-audit-list');
-      quick.innerHTML = logs.slice(0, 3).map(l => `
-        <div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.85rem;">
-          <div style="font-weight:700; color:#fff;">${escapeXml(l.action)}</div>
-          <div style="color:var(--text-muted); font-size:0.8rem;">${escapeXml(l.details)}</div>
-        </div>
-      `).join('');
-    }
-
-    function handleLogout() {
-      localStorage.removeItem('RYEDZ_session_user');
-      window.location.href = 'index.html';
-    }
-
-    function resetToInitialSeed() {
-      if (!confirm('Warning: This will reset prompts and system settings to initial default seed. Proceed?')) return;
-      localStorage.clear();
-      showToast('Store reset complete. Reloading...', 'info');
-      setTimeout(() => window.location.reload(), 600);
-    }
-
-    function showToast(message, type = 'info') {
-      const c = document.getElementById('toast-container');
-      const t = document.createElement('div');
-      t.className = 'toast';
-      t.textContent = message;
-      c.appendChild(t);
-      setTimeout(() => t.remove(), 3200);
-    }
-
-    window.addEventListener('DOMContentLoaded', initDevCenter);
-  </script>
+  document.addEventListener('DOMContentLoaded', initDev);
+</script>
 </body>
 </html>
