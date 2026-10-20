@@ -23,7 +23,22 @@
 </style>
 </head>
 <body>
+<!-- 1. Firebase SDK: wajib dimuat sebelum inisialisasi -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
 
+<!-- 2. Konfigurasi Firebase -->
+<script src="./firebase-config.js"></script>
+
+<!-- 3. Inisialisasi Firebase -->
+<script src="./firebase-init.js"></script>
+
+<!-- 4. Core utilities -->
+<script src="./ryedz-core.js"></script>
+
+<!-- 5. Script khusus halaman -->
+<script src="./app.js"></script>
 <div class="mobile-header-bar">
   <div style="display:flex;align-items:center;gap:10px;">
     <button class="btn btn-secondary btn-sm" onclick="toggleSidebar()" aria-label="Menu">
