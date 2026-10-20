@@ -3,78 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#08080c" />
-<title>Public Prompt Vault — RYEDZ</title>
+<title>Prompt Vault — RYEDZ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="glassmorphism.css" />
 <style>
-  .vault-hero {
-    text-align: center;
-    padding: calc(var(--navbar-height) + var(--space-2xl) + var(--safe-top)) var(--space-base) var(--space-xl);
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  .vault-title {
-    font-size: clamp(1.8rem, 4vw, 2.5rem);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    margin-bottom: 12px;
-    background: linear-gradient(180deg, #ffffff 30%, #94a3b8 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .vault-desc {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    line-height: 1.6;
-  }
-  .controls-wrap {
-    max-width: 1200px;
-    margin: 0 auto var(--space-xl);
-    padding: 0 var(--space-base);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .search-bar-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .search-bar-row .glass-input {
-    min-width: 0;
-  }
-  @media (max-width: 640px) {
-    .search-bar-row { flex-direction: column; }
-    .search-bar-row .glass-input { width: 100% !important; max-width: 100% !important; }
-  }
-  .grid-wrap {
-    max-width: 1200px;
-    margin: 0 auto var(--space-3xl);
-    padding: 0 var(--space-base);
-  }
+  .prompt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 20px; margin-top: 24px; }
 </style>
 </head>
 <body>
-<!-- 1. Firebase SDK: wajib dimuat sebelum inisialisasi -->
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
 
-<!-- 2. Konfigurasi Firebase -->
-<script src="./firebase-config.js"></script>
-
-<!-- 3. Inisialisasi Firebase -->
-<script src="./firebase-init.js"></script>
-
-<!-- 4. Core utilities -->
-<script src="./ryedz-core.js"></script>
-
-<!-- 5. Script khusus halaman -->
-<script src="./app.js"></script>
 <!-- NAVBAR -->
 <div class="navbar-wrapper">
   <header class="navbar-container">
@@ -84,327 +23,62 @@
       </div>
       <span>RYEDZ VAULT</span>
     </a>
-    <ul class="nav-links">
-      <li><a href="index.html" class="nav-link">Home</a></li>
-      <li><a href="promt.html" class="nav-link active">Explore Vault</a></li>
-      <li id="nav-dash-item" style="display:none;">
-        <a href="user.html" class="nav-link" id="nav-dash-link">Dashboard</a>
-      </li>
-    </ul>
     <div class="nav-actions">
-      <button class="btn btn-primary btn-sm" onclick="handleUploadNavClick()">+ Upload</button>
-      <button class="mobile-menu-btn" onclick="document.getElementById('mobile-drawer').classList.toggle('active')" aria-label="Menu">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
+      <a href="index.html" class="btn btn-secondary btn-sm">← Home</a>
+      <a href="login.html" class="btn btn-primary btn-sm">Login to Upload</a>
     </div>
   </header>
 </div>
 
-<div class="mobile-drawer" id="mobile-drawer">
-  <a href="index.html">Home</a>
-  <a href="promt.html">Explore Vault</a>
-  <a href="user.html" id="drawer-dash-link" style="display:none;">Dashboard</a>
-</div>
-
-<!-- HERO -->
-<section class="vault-hero">
-  <h1 class="vault-title">THE PROMPT VAULT</h1>
-  <p class="vault-desc">Explore, inspect, and copy verified high-performance prompts across 25 leading AI models.</p>
+<!-- HEADER -->
+<section class="container" style="text-align: center; padding-top: 120px; padding-bottom: 20px;">
+  <h1 style="font-size: 2.5rem; font-weight: 800; color: #fff; margin-bottom: 12px;">THE PROMPT VAULT</h1>
+  <p style="color: #94a3b8; font-size: 1.05rem;">Koleksi prompt AI terbaik dari komunitas.</p>
 </section>
 
-<!-- CONTROLS -->
-<div class="controls-wrap">
-  <div class="search-bar-row">
-    <input type="text" id="vault-search-input" placeholder="Search prompts..." class="glass-input" style="flex:1;" oninput="debouncedFilter()" />
-    <select id="vault-ai-filter" class="glass-input" style="max-width:200px;font-weight:600;" onchange="applyFilter()">
-      <option value="all">All AI Models</option>
-      <option value="ChatGPT">ChatGPT</option>
-      <option value="Google Gemini">Google Gemini</option>
-      <option value="Claude">Claude</option>
-      <option value="DeepSeek">DeepSeek</option>
-      <option value="Microsoft Copilot">Microsoft Copilot</option>
-      <option value="Meta AI">Meta AI</option>
-      <option value="Grok">Grok</option>
-      <option value="Perplexity AI">Perplexity AI</option>
-      <option value="Mistral AI">Mistral AI</option>
-      <option value="Qwen AI">Qwen AI</option>
-      <option value="Kimi AI">Kimi AI</option>
-      <option value="Character.AI">Character.AI</option>
-      <option value="Poe AI">Poe AI</option>
-      <option value="HuggingChat">HuggingChat</option>
-      <option value="Pi AI">Pi AI</option>
-      <option value="Le Chat">Le Chat</option>
-      <option value="Amazon Q">Amazon Q</option>
-      <option value="GitHub Copilot">GitHub Copilot</option>
-      <option value="Phind AI">Phind AI</option>
-      <option value="You.com AI">You.com AI</option>
-      <option value="Z.ai">Z.ai</option>
-      <option value="ERNIE Bot">ERNIE Bot</option>
-      <option value="Doubao AI">Doubao AI</option>
-      <option value="Tencent Yuanbao">Tencent Yuanbao</option>
-      <option value="AI Studio">AI Studio</option>
-    </select>
-    <select id="sort-select" class="glass-input" style="max-width:160px;font-weight:600;" onchange="applyFilter()">
-      <option value="newest">Newest</option>
-      <option value="popular">Popular</option>
-      <option value="title">A-Z</option>
-    </select>
+<!-- PROMPT GRID -->
+<section class="container" style="padding-bottom: 60px;">
+  <div id="prompt-list" class="prompt-grid">
+    <!-- Skeleton Loader -->
+    <div class="glass-card" style="padding:20px;"><div class="skeleton" style="height:150px; margin-bottom:12px;"></div><div class="skeleton" style="height:20px; width:70%;"></div></div>
+    <div class="glass-card" style="padding:20px;"><div class="skeleton" style="height:150px; margin-bottom:12px;"></div><div class="skeleton" style="height:20px; width:70%;"></div></div>
+    <div class="glass-card" style="padding:20px;"><div class="skeleton" style="height:150px; margin-bottom:12px;"></div><div class="skeleton" style="height:20px; width:70%;"></div></div>
   </div>
+</section>
 
-  <div class="category-pills" id="category-pills-bar">
-    <div class="cat-pill active" onclick="selectCategory('all', this)">All</div>
-    <div class="cat-pill" onclick="selectCategory('Coding & Dev', this)">Coding</div>
-    <div class="cat-pill" onclick="selectCategory('Creative AI', this)">Creative</div>
-    <div class="cat-pill" onclick="selectCategory('Marketing', this)">Marketing</div>
-    <div class="cat-pill" onclick="selectCategory('Writing & Copy', this)">Writing</div>
-    <div class="cat-pill" onclick="selectCategory('Admin Verified', this)">Verified</div>
-    <div class="cat-pill" onclick="selectCategory('General AI', this)">General</div>
-  </div>
-</div>
-
-<!-- GRID -->
-<div class="grid-wrap">
-  <div class="prompts-grid" id="vault-grid"></div>
-</div>
-
-<!-- DETAIL MODAL -->
-<div class="modal-backdrop" id="detail-modal">
-  <div class="modal-box" style="max-width:720px;">
-    <div class="modal-header">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <span class="badge badge-purple" id="modal-category">General</span>
-        <span class="badge badge-ai" id="modal-ai-badge">ChatGPT</span>
-      </div>
-      <button class="modal-close" onclick="closeDetailModal()">✕</button>
-    </div>
-    <div id="modal-thumb-box" style="width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;margin-bottom:20px;background:#050507;"></div>
-    <h2 id="modal-title" style="font-size:1.35rem;font-weight:800;color:var(--text-primary);margin-bottom:8px;"></h2>
-    <div id="modal-meta" style="font-size:0.82rem;color:var(--text-tertiary);margin-bottom:20px;"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <span style="font-size:0.8rem;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.05em;">Prompt Instructions</span>
-      <button class="btn btn-primary btn-sm" onclick="copyModalPrompt()">Copy</button>
-    </div>
-    <textarea id="modal-content" readonly class="glass-input" style="height:230px;"></textarea>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
-      <button class="btn btn-secondary btn-sm" id="btn-fav-prompt" onclick="toggleModalFavorite()">♥ Save</button>
-      <button class="btn btn-secondary btn-sm" onclick="closeDetailModal()">Close</button>
-    </div>
-  </div>
-</div>
-
+<!-- FIREBASE SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="firebase-init.js"></script>
 <script src="ryedz-core.js"></script>
 <script>
-  'use strict';
-  const R = window.Ryedz;
-
-  let allPrompts = [];
-  let selectedCategory = 'all';
-  let activeModalPrompt = null;
-  let currentUser = null;
-
-  function handleUploadNavClick() {
-    if (!currentUser) window.location.href = 'index.html';
-    else window.location.href = R.getRedirectForRole(currentUser.role);
-  }
-
-  function initVault() {
-    currentUser = R.getSessionUser();
-    const dashItem = document.getElementById('nav-dash-item');
-    const dashLink = document.getElementById('nav-dash-link');
-    const drawerLink = document.getElementById('drawer-dash-link');
-
-    if (currentUser && dashItem && dashLink) {
-      dashItem.style.display = 'inline-block';
-      const target = R.getRedirectForRole(currentUser.role);
-      const label = currentUser.role === 'developer' ? 'Developer Center'
-                  : currentUser.role === 'admin' ? 'Admin Panel'
-                  : 'Dashboard';
-      dashLink.href = target;
-      dashLink.textContent = label;
-      if (drawerLink) { drawerLink.href = target; drawerLink.textContent = label; drawerLink.style.display = 'block'; }
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('q')) document.getElementById('vault-search-input').value = params.get('q');
-    if (params.get('ai')) document.getElementById('vault-ai-filter').value = params.get('ai');
-
-    loadVaultPrompts();
-    R.checkMaintenance();
-  }
-
-  function loadVaultPrompts() {
-    const stored = R.getLocalData('prompts', R.SEED_PROMPTS);
-    allPrompts = stored.filter(p => p.status === 'published');
-    applyFilter();
-  }
-
-  function selectCategory(cat, el) {
-    selectedCategory = cat;
-    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    applyFilter();
-  }
-
-  const debouncedFilter = R.debounce(applyFilter, 200);
-
-  function applyFilter() {
-    const q = (document.getElementById('vault-search-input').value || '').toLowerCase().trim();
-    const ai = document.getElementById('vault-ai-filter').value || 'all';
-    const sort = document.getElementById('sort-select').value;
-
-    const filtered = allPrompts.filter(p => {
-      const mCat = selectedCategory === 'all' || p.category === selectedCategory;
-      const mQ = !q || ((p.title || '') + ' ' + (p.content || '')).toLowerCase().includes(q);
-      const mAi = ai === 'all' || p.aiModel === ai;
-      return mCat && mQ && mAi;
-    });
-
-    if (sort === 'newest') {
-      filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    } else if (sort === 'title') {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
-    } else if (sort === 'popular') {
-      filtered.sort((a, b) => (b.copiedCount || 0) - (a.copiedCount || 0) || (b.createdAt || 0) - (a.createdAt || 0));
-    }
-
-    renderGrid(filtered);
-  }
-
-  function renderGrid(prompts) {
-    const grid = document.getElementById('vault-grid');
+  // Ambil data dari Firebase
+  RyedzFB.listenPublishedPrompts((prompts) => {
+    const list = document.getElementById('prompt-list');
+    
     if (prompts.length === 0) {
-      grid.innerHTML = `
-        <div class="glass" style="grid-column:1/-1;padding:48px 24px;text-align:center;">
-          <div style="font-size:2.5rem;margin-bottom:12px;">🔍</div>
-          <h3 style="color:var(--text-primary);font-size:1.2rem;margin-bottom:8px;">No Prompts Found</h3>
-          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:20px;">No prompts match your filter.</p>
-          <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Reset Filters</button>
-        </div>`;
+      list.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">Belum ada prompt yang dipublish.</div>`;
       return;
     }
 
-    grid.innerHTML = prompts.map(p => {
-      const thumb = R.generateThumbnail(p.id, p.title, p.aiModel);
-      return `
-        <div class="glass-card">
-          <div class="card-thumb"><img src="${thumb}" alt="${R.escapeXml(p.title)}" loading="lazy" /></div>
-          <div class="card-body">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;">
-              <span class="badge badge-purple" style="max-width:50%;overflow:hidden;text-overflow:ellipsis;">${R.escapeXml(p.category || 'General')}</span>
-              <span class="badge badge-blue" style="max-width:50%;overflow:hidden;text-overflow:ellipsis;">${R.escapeXml(p.aiModel || 'ChatGPT')}</span>
-            </div>
-            <h3 class="card-title">${R.escapeXml(p.title)}</h3>
-            <div class="card-meta">
-              <span>By ${R.escapeXml((p.ownerEmail || 'creator').split('@')[0])}</span>
-              <span>${R.formatDate(p.createdAt)}</span>
-            </div>
-            <div class="card-actions">
-              <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openDetail('${p.id}')">Open</button>
-              <button class="btn btn-secondary btn-sm" onclick="quickCopyPrompt('${p.id}')">Copy</button>
-            </div>
+    list.innerHTML = prompts.map(p => `
+      <div class="glass-card" style="border-radius:16px; overflow:hidden;">
+        <img src="${Ryedz.generateThumbnail(p.id, p.title, p.aiModel)}" style="width:100%; display:block;">
+        <div style="padding: 16px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span class="badge badge-blue">${Ryedz.escapeXml(p.aiModel)}</span>
+            <span class="badge badge-purple">${Ryedz.escapeXml(p.category || 'General')}</span>
           </div>
-        </div>`;
-    }).join('');
-  }
-
-  function clearFilters() {
-    document.getElementById('vault-search-input').value = '';
-    document.getElementById('vault-ai-filter').value = 'all';
-    selectedCategory = 'all';
-    document.querySelectorAll('.cat-pill').forEach((p, i) => p.classList.toggle('active', i === 0));
-    applyFilter();
-  }
-
-  function openDetail(id) {
-    const p = allPrompts.find(x => x.id === id);
-    if (!p) return;
-    activeModalPrompt = p;
-    document.getElementById('modal-title').textContent = p.title;
-    document.getElementById('modal-content').value = p.content;
-    document.getElementById('modal-category').textContent = p.category || 'General';
-    document.getElementById('modal-ai-badge').textContent = p.aiModel || 'ChatGPT';
-    document.getElementById('modal-meta').textContent =
-      'By ' + (p.ownerEmail ? p.ownerEmail.split('@')[0] : 'Creator') + ' • Published ' + R.formatDate(p.createdAt);
-    document.getElementById('modal-thumb-box').innerHTML =
-      '<img src="' + R.generateThumbnail(p.id, p.title, p.aiModel) + '" style="width:100%;height:100%;object-fit:cover;" />';
-
-    const favBtn = document.getElementById('btn-fav-prompt');
-    if (currentUser) {
-      const favs = R.getLocalData('favorites_' + currentUser.uid, []);
-      const isFav = favs.some(f => f.id === p.id);
-      favBtn.textContent = isFav ? '♥ Remove' : '♥ Save';
-    } else {
-      favBtn.textContent = '♥ Save';
-    }
-
-    document.getElementById('detail-modal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeDetailModal() {
-    document.getElementById('detail-modal').classList.remove('active');
-    document.body.style.overflow = '';
-    activeModalPrompt = null;
-  }
-
-  async function copyModalPrompt() {
-    if (!activeModalPrompt) return;
-    const stored = R.getLocalData('prompts', []);
-    const match = stored.find(x => x.id === activeModalPrompt.id);
-    if (match) {
-      match.copiedCount = (match.copiedCount || 0) + 1;
-      R.setLocalData('prompts', stored);
-    }
-    const ok = await R.copyText(activeModalPrompt.content);
-    R.showToast(ok ? 'Prompt copied!' : 'Gagal copy.', ok ? 'success' : 'error');
-  }
-
-  async function quickCopyPrompt(id) {
-    const p = allPrompts.find(x => x.id === id);
-    if (!p) return;
-    const stored = R.getLocalData('prompts', []);
-    const match = stored.find(x => x.id === id);
-    if (match) {
-      match.copiedCount = (match.copiedCount || 0) + 1;
-      R.setLocalData('prompts', stored);
-    }
-    const ok = await R.copyText(p.content);
-    R.showToast(ok ? 'Prompt copied!' : 'Gagal copy.', ok ? 'success' : 'error');
-  }
-
-  function toggleModalFavorite() {
-    if (!currentUser) {
-      window.location.href = 'index.html';
-      return;
-    }
-    if (!activeModalPrompt) return;
-    const key = 'favorites_' + currentUser.uid;
-    const favs = R.getLocalData(key, []);
-    const idx = favs.findIndex(f => f.id === activeModalPrompt.id);
-    if (idx >= 0) {
-      favs.splice(idx, 1);
-      document.getElementById('btn-fav-prompt').textContent = '♥ Save';
-      R.showToast('Removed.', 'info');
-    } else {
-      favs.push(activeModalPrompt);
-      document.getElementById('btn-fav-prompt').textContent = '♥ Remove';
-      R.showToast('Saved!', 'success');
-    }
-    R.setLocalData(key, favs);
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    initVault();
-    document.querySelectorAll('.modal-backdrop').forEach(bd => {
-      bd.addEventListener('click', e => {
-        if (e.target === bd) {
-          bd.classList.remove('active');
-          document.body.style.overflow = '';
-        }
-      });
-    });
+          <h3 style="margin-bottom:8px; color:#fff; font-size:1.1rem;">${Ryedz.escapeXml(p.title)}</h3>
+          <p style="color:#94a3b8; font-size:14px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${Ryedz.escapeXml(p.content)}</p>
+          <div style="font-size:0.75rem; color:#64748b; margin-top:16px; border-top:1px solid #333; padding-top:12px;">
+            By ${Ryedz.escapeXml((p.ownerEmail || 'creator').split('@')[0])}
+          </div>
+        </div>
+      </div>
+    `).join('');
   });
 </script>
 </body>
