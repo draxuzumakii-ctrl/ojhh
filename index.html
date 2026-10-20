@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RYEDZ PROMPT VAULT — Modern AI Prompt Library</title>
+  <meta name="description" content="Discover, save, and share powerful AI prompts in one premium workspace. Super Glassmorphism platform with real-time Firebase backend." />
+  <meta property="og:title" content="RYEDZ PROMPT VAULT — Modern AI Prompt Library" />
+  <meta property="og:description" content="Discover, save, and share powerful AI prompts in one premium workspace." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Firebase Web SDK Compat (CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-base: #07080c;
+      --bg-surface: rgba(14, 16, 24, 0.65);
+      --bg-surface-elevated: rgba(22, 25, 38, 0.75);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(168, 85, 247, 0.35);
+      --accent-purple: #8b5cf6;
+      --accent-purple-glow: rgba(139, 92, 246, 0.25);
+      --accent-blue: #38bdf8;
+      --accent-blue-glow: rgba(56, 189, 248, 0.2);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --danger: #f43f5e;
+      --success: #10b981;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 25%, rgba(56, 189, 248, 0.1) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    /* Super Glassmorphism Utility */
+    .glass {
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+    }
+
+    .glass-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%), var(--bg-surface);
+      backdrop-filter: blur(18px) saturate(180%);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(168, 85, 247, 0.35);
+      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6), 0 0 20px -5px var(--accent-purple-glow);
+    }
+
+    .glass-input {
+      width: 100%;
+      background: rgba(10, 12, 18, 0.7);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .glass-input:focus {
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 0 3px var(--accent-purple-glow);
+      background: rgba(15, 18, 28, 0.9);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 11px 22px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border: none;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .btn:active {
+      transform: scale(0.97);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 18px rgba(124, 58, 237, 0.35);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 6px 24px rgba(124, 58, 237, 0.55);
+      filter: brightness(1.08);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      backdrop-filter: blur(10px);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .btn-outline:hover {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: var(--accent-blue);
+    }
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 0.82rem;
+      border-radius: 9px;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-purple {
+      background: rgba(139, 92, 246, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+    .badge-blue {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .badge-green {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .badge-amber {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    /* Floating Navbar */
+    .navbar-wrapper {
+      position: fixed;
+      top: 14px;
+      left: 0;
+      right: 0;
+      z-index: 990;
+      padding: 0 16px;
+      pointer-events: none;
+    }
+    .navbar-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: rgba(12, 14, 22, 0.8);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 18px;
+      box-shadow: 0 10px 35px -10px rgba(0, 0, 0, 0.7);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #8b5cf6 0%, #38bdf8 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+    }
+    .brand-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: #ffffff;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      list-style: none;
+    }
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Mobile Nav Toggle */
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    /* Announcement Banner */
+    #announcement-banner-container {
+      margin-top: 86px;
+      padding: 0 16px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .banner-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.18), rgba(56, 189, 248, 0.12));
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      animation: fadeIn 0.4s ease;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding: 110px 16px 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+    }
+    .hero-badge-wrap {
+      display: inline-block;
+      margin-bottom: 18px;
+    }
+    .hero-title {
+      font-size: clamp(2.5rem, 6vw, 4.4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #ffffff 40%, #c4b5fd 80%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-description {
+      font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    /* Live Search Bar */
+    .search-container {
+      max-width: 720px;
+      margin: 0 auto 50px;
+      position: relative;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: rgba(14, 17, 26, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 6px 8px 6px 18px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      transition: all 0.2s ease;
+    }
+    .search-box:focus-within {
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 0 4px var(--accent-purple-glow), 0 12px 35px rgba(0, 0, 0, 0.6);
+    }
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-size: 1rem;
+      padding: 8px 6px;
+      font-family: inherit;
+    }
+    .search-box input::placeholder {
+      color: var(--text-subtle);
+    }
+
+    /* Prompt Grid */
+    .section-wrap {
+      max-width: 1200px;
+      margin: 0 auto 60px;
+      padding: 0 16px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .prompt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 22px;
+    }
+
+    /* Prompt Card */
+    .card-thumb-wrap {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 14px 14px 0 0;
+      overflow: hidden;
+      background: #0d0f18;
+      position: relative;
+    }
+    .card-thumb-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+    .card-body {
+      padding: 18px;
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 2.8rem;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-subtle);
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+    }
+    .card-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 14px;
+    }
+
+    /* Modal System */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-backdrop.active {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-box {
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      position: relative;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .modal-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .modal-close {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+    }
+
+    /* Auth Modal Tabs */
+    .tab-pills {
+      display: flex;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .tab-pill {
+      flex: 1;
+      text-align: center;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-pill.active {
+      color: #ffffff;
+      background: rgba(139, 92, 246, 0.35);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+    }
+
+    /* Maintenance Overlay */
+    #maintenance-banner-view {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 9, 14, 0.95);
+      backdrop-filter: blur(25px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: rgba(18, 20, 32, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      font-size: 0.9rem;
+      font-weight: 500;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideUp 0.25s ease;
+      min-width: 260px;
+      max-width: 400px;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 40px 16px 50px;
+      margin-top: 60px;
+      background: rgba(10, 11, 16, 0.6);
+      backdrop-filter: blur(12px);
+    }
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .mobile-menu-btn { display: block; }
+      .mobile-nav-drawer {
+        display: none;
+        position: fixed;
+        top: 75px;
+        left: 16px;
+        right: 16px;
+        background: rgba(14, 16, 26, 0.95);
+        backdrop-filter: blur(25px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        padding: 16px;
+        z-index: 989;
+      }
+      .mobile-nav-drawer.active { display: block; }
+      .mobile-nav-drawer a {
+        display: block;
+        padding: 12px 14px;
+        color: var(--text-main);
+        text-decoration: none;
+        font-weight: 600;
+        border-radius: 10px;
+      }
+      .mobile-nav-drawer a:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Floating Navbar -->
+  <div class="navbar-wrapper">
+    <header class="navbar-container">
+      <a href="index.html" class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11zm0 4.5L3.5 11 2 11.75l10 5 10-5-1.5-.75L12 15.5zM2 16.5l10 5 10-5-1.5-.75L12 20.25 3.5 16l-1.5.5z"/></svg>
+        </div>
+        <span>RYEDZ PROMPT VAULT</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html" class="nav-link active">Home</a></li>
+        <li><a href="promt.html" class="nav-link">Explore Vault</a></li>
+        <li id="nav-dashboard-item" style="display:none;"><a href="user.html" class="nav-link" id="nav-dashboard-link">Dashboard</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- Firebase Status Indicator Button -->
+        <button id="fb-config-btn" class="btn btn-secondary btn-sm" title="Firebase Status">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;" id="fb-status-dot"></span>
+          <span id="fb-status-text">Cloud Sync</span>
+        </button>
+
+        <div id="auth-buttons-unlogged">
+          <button class="btn btn-secondary btn-sm" onclick="openAuthModal('login')">Login</button>
+          <button class="btn btn-primary btn-sm" onclick="openAuthModal('register')">Register</button>
+        </div>
+
+        <div id="auth-buttons-logged" style="display:none; align-items:center; gap:8px;">
+          <a href="user.html" class="btn btn-secondary btn-sm" id="user-badge-name">Dashboard</a>
+          <button class="btn btn-outline btn-sm" onclick="handleLogout()">Logout</button>
+        </div>
+
+        <button class="mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+        </button>
+      </div>
+    </header>
+  </div>
+
+  <!-- Mobile Drawer -->
+  <div class="mobile-nav-drawer" id="mobile-drawer">
+    <a href="index.html">Home</a>
+    <a href="promt.html">Explore Vault</a>
+    <a href="user.html" id="drawer-dashboard-link" style="display:none;">Dashboard</a>
+    <div style="border-top:1px solid rgba(255,255,255,0.08); margin-top:10px; padding-top:10px;">
+      <div id="drawer-unlogged">
+        <button class="btn btn-primary btn-sm" style="width:100%" onclick="openAuthModal('login')">Sign In / Register</button>
+      </div>
+      <div id="drawer-logged" style="display:none;">
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="handleLogout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement Banner Container -->
+  <div id="announcement-banner-container"></div>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-badge-wrap">
+      <span class="badge badge-purple">Next-Gen AI Prompt Ecosystem</span>
+    </div>
+    <h1 class="hero-title" id="hero-title-text">YOUR AI PROMPT LIBRARY</h1>
+    <p class="hero-description" id="hero-desc-text">
+      Discover, save, and share powerful AI prompts in one premium workspace. Built with ultra-clean 2-input uploads, deterministic 16:9 thumbnails, and bulletproof role security.
+    </p>
+
+    <div class="hero-cta">
+      <a href="promt.html" class="btn btn-primary">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Explore Vault
+      </a>
+      <button class="btn btn-secondary" onclick="handleUploadHeroClick()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Upload Your Prompt
+      </button>
+    </div>
+
+    <!-- Search Bar in Hero with AI Platform Filter -->
+    <div class="search-container">
+      <form class="search-box" onsubmit="handleHeroSearch(event)" style="flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; align-items:center; flex:1; min-width:240px;">
+          <svg width="20" height="20" fill="none" stroke="var(--text-subtle)" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" id="hero-search-input" placeholder="Search prompts (e.g. Website Builder, Python, Copywriting)..." />
+        </div>
+        <select id="hero-ai-select" class="glass-input" style="width:auto; min-width:160px; padding:6px 12px; font-size:0.85rem; font-weight:600; border-radius:10px;">
+          <option value="all">Semua Jenis AI (25)</option>
+          <option value="ChatGPT">1. ChatGPT</option>
+          <option value="Google Gemini">2. Google Gemini</option>
+          <option value="Claude">3. Claude</option>
+          <option value="DeepSeek">4. DeepSeek</option>
+          <option value="Microsoft Copilot">5. Microsoft Copilot</option>
+          <option value="Meta AI">6. Meta AI</option>
+          <option value="Grok">7. Grok</option>
+          <option value="Perplexity AI">8. Perplexity AI</option>
+          <option value="Mistral AI">9. Mistral AI</option>
+          <option value="Qwen AI">10. Qwen AI</option>
+          <option value="Kimi AI">11. Kimi AI</option>
+          <option value="Character.AI">12. Character.AI</option>
+          <option value="Poe AI">13. Poe AI</option>
+          <option value="HuggingChat">14. HuggingChat</option>
+          <option value="Pi AI">15. Pi AI</option>
+          <option value="Le Chat">16. Le Chat</option>
+          <option value="Amazon Q">17. Amazon Q</option>
+          <option value="GitHub Copilot">18. GitHub Copilot</option>
+          <option value="Phind AI">19. Phind AI</option>
+          <option value="You.com AI">20. You.com AI</option>
+          <option value="Z.ai">21. Z.ai</option>
+          <option value="ERNIE Bot">22. ERNIE Bot</option>
+          <option value="Doubao AI">23. Doubao AI</option>
+          <option value="Tencent Yuanbao">24. Tencent Yuanbao</option>
+          <option value="AI Studio">25. AI Studio</option>
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Featured Prompts Section -->
+  <section class="section-wrap">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">
+          <span style="color:#a855f7;">★</span> Featured Prompts
+        </h2>
+        <p class="section-subtitle">Hand-curated, verified high performance prompts from the community</p>
+      </div>
+      <a href="promt.html" class="btn btn-outline btn-sm">View All Vault →</a>
+    </div>
+
+    <div class="prompt-grid" id="featured-prompts-grid">
+      <!-- Loading Skeleton -->
+      <div class="glass-card" style="padding:20px; text-align:center;">
+        <div style="height:160px; background:rgba(255,255,255,0.03); border-radius:12px; margin-bottom:14px;"></div>
+        <div style="height:20px; background:rgba(255,255,255,0.05); border-radius:6px; margin-bottom:8px;"></div>
+        <div style="height:14px; width:60%; background:rgba(255,255,255,0.03); border-radius:6px; margin:0 auto;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest Prompts Section -->
+  <section class="section-wrap">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">
+          <span style="color:#38bdf8;">⚡</span> Latest Additions
+        </h2>
+        <p class="section-subtitle">Freshly published AI prompts ready to copy and use</p>
+      </div>
+      <a href="promt.html?sort=latest" class="btn btn-secondary btn-sm">Explore More</a>
+    </div>
+
+    <div class="prompt-grid" id="latest-prompts-grid">
+      <!-- Dynamic cards loaded via JS -->
+    </div>
+  </section>
+
+  <!-- Prompt Detail Modal -->
+  <div class="modal-backdrop" id="prompt-detail-modal">
+    <div class="glass modal-box" style="max-width:680px;">
+      <div class="modal-header">
+        <span class="badge badge-purple" id="detail-category-badge">General</span>
+        <button class="modal-close" onclick="closeDetailModal()">✕</button>
+      </div>
+      
+      <div id="detail-thumb-container" style="width:100%; aspect-ratio:16/9; border-radius:14px; overflow:hidden; margin-bottom:18px;"></div>
+      
+      <h3 id="detail-title" style="font-size:1.45rem; font-weight:800; color:#fff; margin-bottom:12px;"></h3>
+      <div style="display:flex; align-items:center; gap:16px; font-size:0.85rem; color:var(--text-subtle); margin-bottom:18px;">
+        <span id="detail-author">By Anonymous</span>
+        <span>•</span>
+        <span id="detail-date">Recently</span>
+      </div>
+
+      <div style="position:relative; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">PROMPT TEXT</span>
+          <button class="btn btn-primary btn-sm" id="detail-copy-btn" onclick="copyDetailPrompt()">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Copy Prompt
+          </button>
+        </div>
+        <textarea id="detail-content" readonly class="glass-input" style="height:220px; font-family:'JetBrains Mono', monospace; font-size:0.88rem; line-height:1.5; resize:none;"></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-secondary btn-sm" id="detail-fav-btn" onclick="toggleDetailFavorite()">
+          ♥ Add to Favorites
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="closeDetailModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authentication Modal -->
+  <div class="modal-backdrop" id="auth-modal">
+    <div class="glass modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="auth-modal-title">Sign In</h3>
+        <button class="modal-close" onclick="closeAuthModal()">✕</button>
+      </div>
+
+      <div class="tab-pills">
+        <div class="tab-pill active" id="tab-btn-login" onclick="switchAuthTab('login')">Login</div>
+        <div class="tab-pill" id="tab-btn-register" onclick="switchAuthTab('register')">Register</div>
+        <div class="tab-pill" id="tab-btn-reset" onclick="switchAuthTab('reset')">Reset</div>
+      </div>
+
+      <div id="auth-error-box" style="display:none; padding:10px 14px; background:rgba(244,63,94,0.15); border:1px solid rgba(244,63,94,0.3); border-radius:10px; color:#fda4af; font-size:0.85rem; margin-bottom:16px;"></div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div style="margin-bottom:16px;" id="name-input-group">
+          <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Display Name</label>
+          <input type="text" id="auth-name" class="glass-input" placeholder="e.g. Alex Ryedz" />
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Email Address</label>
+          <input type="email" id="auth-email" required class="glass-input" placeholder="name@example.com" />
+        </div>
+
+        <div style="margin-bottom:20px;" id="password-input-group">
+          <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">Password</label>
+          <input type="password" id="auth-password" class="glass-input" placeholder="••••••••" minlength="6" />
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="auth-submit-btn" style="width:100%;">
+          Sign In
+        </button>
+      </form>
+
+      <div style="margin-top:18px; text-align:center; font-size:0.82rem; color:var(--text-subtle);">
+        Protected by Firebase Authentication & RYEDZ Security Framework.
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Setup Modal -->
+  <div class="modal-backdrop" id="firebase-config-modal">
+    <div class="glass modal-box" style="max-width:580px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Firebase Cloud Connection</h3>
+        <button class="modal-close" onclick="closeFirebaseModal()">✕</button>
+      </div>
+      <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">
+        Connect your project credentials to enable live Cloud Firestore syncing across all 5 pages. Values are saved locally in your browser.
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+        <div>
+          <label style="font-size:0.78rem; color:var(--text-subtle);">API Key</label>
+          <input type="text" id="cfg-apiKey" class="glass-input" placeholder="AIzaSy..." />
+        </div>
+        <div>
+          <label style="font-size:0.78rem; color:var(--text-subtle);">Project ID</label>
+          <input type="text" id="cfg-projectId" class="glass-input" placeholder="ryedz-vault" />
+        </div>
+        <div>
+          <label style="font-size:0.78rem; color:var(--text-subtle);">Auth Domain</label>
+          <input type="text" id="cfg-authDomain" class="glass-input" placeholder="ryedz-vault.firebaseapp.com" />
+        </div>
+        <div>
+          <label style="font-size:0.78rem; color:var(--text-subtle);">Storage Bucket</label>
+          <input type="text" id="cfg-storageBucket" class="glass-input" placeholder="ryedz-vault.appspot.com" />
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button class="btn btn-secondary btn-sm" onclick="resetToDemoData()">Reset to Demo Store</button>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-secondary btn-sm" onclick="closeFirebaseModal()">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveFirebaseConfig()">Save & Connect</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full Maintenance Mode Overlay (Controlled via Developer Control Center) -->
+  <div id="maintenance-banner-view">
+    <div class="glass" style="max-width:560px; padding:40px; border:1px solid rgba(245,158,11,0.3); border-radius:24px;">
+      <div style="width:64px; height:64px; border-radius:18px; background:rgba(245,158,11,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; color:#fbbf24; font-size:2rem;">
+        🛠
+      </div>
+      <h2 id="maint-title" style="font-size:1.6rem; font-weight:800; color:#ffffff; margin-bottom:12px;">RYEDZ PROMPT VAULT SEDANG DALAM PEMELIHARAAN</h2>
+      <p id="maint-desc" style="color:var(--text-muted); font-size:0.95rem; margin-bottom:18px; line-height:1.6;">
+        Kami sedang meningkatkan sistem untuk memberikan pengalaman yang lebih baik. Silakan kembali beberapa saat lagi.
+      </p>
+      <div id="maint-reason-box" style="padding:10px; background:rgba(255,255,255,0.04); border-radius:10px; font-size:0.85rem; color:var(--text-subtle); margin-bottom:24px;">
+        Reason: Scheduled upgrade & security hardening.
+      </div>
+      <div style="display:flex; gap:12px; justify-content:center;">
+        <button class="btn btn-secondary btn-sm" onclick="window.location.reload()">Coba Lagi</button>
+        <a href="develover.html" class="btn btn-outline btn-sm">Developer Bypass</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="brand-icon" style="width:28px; height:28px;">
+          <svg viewBox="0 0 24 24" style="width:16px; height:16px;"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg>
+        </div>
+        <span style="font-weight:700; color:#fff; font-size:0.95rem;">RYEDZ PROMPT VAULT</span>
+      </div>
+      <div style="color:var(--text-subtle); font-size:0.85rem;" id="footer-copy">
+        © 2026 RYEDZ PROMPT VAULT. Built with Super Glassmorphism Architecture.
+      </div>
+      <div style="display:flex; gap:16px; font-size:0.85rem;">
+        <a href="index.html" style="color:var(--text-muted); text-decoration:none;">Home</a>
+        <a href="promt.html" style="color:var(--text-muted); text-decoration:none;">Explore Vault</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // ==========================================
+    // 1. DETERMINISTIC THUMBNAIL GENERATOR (SVG)
+    // ==========================================
+    function escapeXml(unsafe) {
+      if (!unsafe) return '';
+      return String(unsafe).replace(/[<>&'"]/g, function (c) {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+        }
+      });
+    }
+
+    function generateDeterministicThumbnail(id, title, aiModel) {
+      const safeId = id || 'ryedz-vault';
+      let hash = 0;
+      for (let i = 0; i < (safeId + title).length; i++) {
+        hash = ((hash << 5) - hash) + (safeId + title).charCodeAt(i);
+        hash |= 0;
+      }
+      hash = Math.abs(hash);
+
+      const colorPairs = [
+        { c1: '#8b5cf6', c2: '#38bdf8', bg1: '#0e101a', bg2: '#07080c' },
+        { c1: '#ec4899', c2: '#8b5cf6', bg1: '#120d1c', bg2: '#06060a' },
+        { c1: '#06b6d4', c2: '#3b82f6', bg1: '#09131d', bg2: '#05070a' },
+        { c1: '#10b981', c2: '#06b6d4', bg1: '#071612', bg2: '#050a08' },
+        { c1: '#f59e0b', c2: '#ef4444', bg1: '#19110a', bg2: '#080605' }
+      ];
+      const palette = colorPairs[hash % colorPairs.length];
+
+      const cleanTitle = (title || 'AI PROMPT').trim();
+      const displayTitle = cleanTitle.length > 38 ? cleanTitle.substring(0, 35) + '...' : cleanTitle;
+      const safeEscapedTitle = escapeXml(displayTitle);
+      const safeEscapedAi = escapeXml(aiModel || 'ChatGPT');
+
+      const sphereX1 = 120 + (hash % 180);
+      const sphereY1 = 80 + ((hash >> 2) % 100);
+      const sphereX2 = 420 + ((hash >> 4) % 150);
+      const sphereY2 = 200 + ((hash >> 6) % 90);
+
+      const svgString = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="bgGrad_${hash}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${palette.bg1}"/>
+            <stop offset="100%" stop-color="${palette.bg2}"/>
+          </linearGradient>
+          <radialGradient id="glow1_${hash}" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="${palette.c1}" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="${palette.c1}" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="glow2_${hash}" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="${palette.c2}" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="${palette.c2}" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="accentGrad_${hash}" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="${palette.c1}"/>
+            <stop offset="100%" stop-color="${palette.c2}"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Background -->
+        <rect width="640" height="360" fill="url(#bgGrad_${hash})"/>
+
+        <!-- Atmospheric Glowing Orbs -->
+        <circle cx="${sphereX1}" cy="${sphereY1}" r="170" fill="url(#glow1_${hash})"/>
+        <circle cx="${sphereX2}" cy="${sphereY2}" r="190" fill="url(#glow2_${hash})"/>
+
+        <!-- Abstract Grid lines -->
+        <g stroke="rgba(255,255,255,0.04)" stroke-width="1">
+          <line x1="0" y1="90" x2="640" y2="90"/>
+          <line x1="0" y1="180" x2="640" y2="180"/>
+          <line x1="0" y1="270" x2="640" y2="270"/>
+          <line x1="160" y1="0" x2="160" y2="360"/>
+          <line x1="320" y1="0" x2="320" y2="360"/>
+          <line x1="480" y1="0" x2="480" y2="360"/>
+        </g>
+
+        <!-- Glass Badge Card -->
+        <rect x="40" y="40" width="560" height="280" rx="18" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+
+        <!-- Top left vault pill -->
+        <rect x="65" y="65" width="115" height="26" rx="13" fill="rgba(255,255,255,0.05)" stroke="url(#accentGrad_${hash})" stroke-width="1"/>
+        <text x="122" y="82" fill="#e2e8f0" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" font-weight="700" letter-spacing="1" text-anchor="middle">RYEDZ VAULT</text>
+
+        <!-- Top right AI Model pill -->
+        <rect x="425" y="65" width="150" height="26" rx="13" fill="rgba(255,255,255,0.06)" stroke="url(#accentGrad_${hash})" stroke-width="1"/>
+        <text x="500" y="82" fill="#38bdf8" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" font-weight="700" text-anchor="middle">${safeEscapedAi}</text>
+
+        <!-- Prompt Title -->
+        <text x="65" y="165" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-size="25" font-weight="800" letter-spacing="-0.5">${safeEscapedTitle}</text>
+
+        <!-- Abstract Tech Bar -->
+        <rect x="65" y="250" width="280" height="4" rx="2" fill="url(#accentGrad_${hash})"/>
+        <circle cx="360" cy="252" r="4" fill="${palette.c1}"/>
+        <circle cx="380" cy="252" r="4" fill="${palette.c2}"/>
+
+        <!-- Corner Watermark -->
+        <text x="575" y="295" fill="rgba(255,255,255,0.3)" font-family="'JetBrains Mono', monospace" font-size="11" text-anchor="end">AI // PROMPT</text>
+      </svg>`;
+
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
+    }
+
+    // ==========================================
+    // 2. UNIFIED FIREBASE & LOCAL-SYNC STORE
+    // ==========================================
+    const DEFAULT_CONFIG = {
+      apiKey: "AIzaSyRyedzDemoKey2026PromptVaultLive",
+      authDomain: "ryedz-prompt-vault.firebaseapp.com",
+      projectId: "ryedz-prompt-vault",
+      storageBucket: "ryedz-prompt-vault.appspot.com",
+      messagingSenderId: "94349862331",
+      appId: "1:94349862331:web:a1b2c3d4e5f67890"
+    };
+
+    let firebaseApp = null;
+    let auth = null;
+    let db = null;
+    let currentUser = null;
+    let currentUserRole = 'user';
+
+    // Seed Data in case live DB is fresh
+    const SEED_PROMPTS = [
+      {
+        id: "seed-1",
+        title: "Senior Full-Stack Architect & Code Reviewer",
+        content: "Act as a Principal Staff Engineer. Review the following code architecture for scalability, memory leaks, OWASP top 10 vulnerabilities, and maintainability. Propose atomic refactoring steps.",
+        ownerUid: "system-admin",
+        ownerEmail: "ryedzoffc@gmail.com",
+        aiModel: "ChatGPT",
+        category: "Coding & Dev",
+        status: "published",
+        createdAt: Date.now() - 3600000 * 24,
+        publishedAt: Date.now() - 3600000 * 20
+      },
+      {
+        id: "seed-2",
+        title: "High-Converting SaaS Landing Page Copywriter",
+        content: "Generate a conversion-optimized SaaS landing page copy. Include Hero headline with curiosity hook, problem agitation, 3 value pillars with quantified proof, testimonial layout, and sticky CTA.",
+        ownerUid: "system-admin",
+        ownerEmail: "ryedzoffc@gmail.com",
+        aiModel: "Claude",
+        category: "Marketing",
+        status: "published",
+        createdAt: Date.now() - 3600000 * 48,
+        publishedAt: Date.now() - 3600000 * 36
+      },
+      {
+        id: "seed-3",
+        title: "Midjourney Photorealistic Product Photography",
+        content: "A sleek modern luxury perfume bottle on an obsidian glass surface, soft violet and cyan rim light, subtle water droplets, 8k resolution, macro shot, photorealistic, cinematic volumetric lighting --ar 16:9 --v 6.0",
+        ownerUid: "system-admin",
+        ownerEmail: "ryedzoffc@gmail.com",
+        aiModel: "DeepSeek",
+        category: "Creative AI",
+        status: "published",
+        createdAt: Date.now() - 3600000 * 72,
+        publishedAt: Date.now() - 3600000 * 50
+      }
+    ];
+
+    function getLocalData(key, fallback) {
+      try {
+        const val = localStorage.getItem('RYEDZ_' + key);
+        return val ? JSON.parse(val) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function setLocalData(key, value) {
+      try {
+        localStorage.setItem('RYEDZ_' + key, JSON.stringify(value));
+      } catch (e) {}
+    }
+
+    // Initialize Store
+    if (!localStorage.getItem('RYEDZ_prompts')) {
+      setLocalData('prompts', SEED_PROMPTS);
+    }
+    if (!localStorage.getItem('RYEDZ_website_settings')) {
+      setLocalData('website_settings', {
+        heroTitle: "YOUR AI PROMPT LIBRARY",
+        heroDesc: "Discover, save, and share powerful AI prompts in one premium workspace.",
+        maintenance: {
+          mode: "NORMAL", // NORMAL, NOTICE, LIMITED, MAINTENANCE
+          title: "RYEDZ PROMPT VAULT SEDANG DALAM PEMELIHARAAN",
+          desc: "Kami sedang meningkatkan sistem untuk memberikan pengalaman yang lebih baik. Silakan kembali beberapa saat lagi.",
+          reason: "Scheduled upgrade & security hardening",
+          active: false
+        }
+      });
+    }
+
+    function initFirebase() {
+      const storedCfg = getLocalData('firebase_config', DEFAULT_CONFIG);
+      try {
+        if (!firebase.apps.length) {
+          firebaseApp = firebase.initializeApp(storedCfg);
+        } else {
+          firebaseApp = firebase.app();
+        }
+        auth = firebase.auth();
+        db = firebase.firestore();
+
+        document.getElementById('fb-status-dot').style.background = '#10b981';
+        document.getElementById('fb-status-text').textContent = 'Cloud Sync';
+
+        // Auth State Listener
+        auth.onAuthStateChanged(async (user) => {
+          if (user) {
+            currentUser = user;
+            // Check role in users collection or fallback
+            await syncUserRole(user);
+            updateAuthUI(true);
+          } else {
+            currentUser = null;
+            currentUserRole = 'user';
+            updateAuthUI(false);
+          }
+        });
+      } catch (err) {
+        console.warn('Firebase online sync initial notice:', err.message);
+        document.getElementById('fb-status-dot').style.background = '#f59e0b';
+        document.getElementById('fb-status-text').textContent = 'Local Vault';
+      }
+    }
+
+    async function syncUserRole(user) {
+      // Check Developer bootstrap
+      if (user.email === 'ryedzoffc@gmail.com') {
+        currentUserRole = 'developer';
+        return;
+      }
+
+      // Check Firestore doc if connected
+      if (db) {
+        try {
+          const doc = await db.collection('users').doc(user.uid).get();
+          if (doc.exists) {
+            currentUserRole = doc.data().role || 'user';
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // Fallback local check
+      const users = getLocalData('users', []);
+      const match = users.find(u => u.uid === user.uid || u.email === user.email);
+      currentUserRole = match ? match.role : 'user';
+    }
+
+    function updateAuthUI(isLoggedIn) {
+      const unlogged = document.getElementById('auth-buttons-unlogged');
+      const logged = document.getElementById('auth-buttons-logged');
+      const badge = document.getElementById('user-badge-name');
+      const navDashItem = document.getElementById('nav-dashboard-item');
+      const navDashLink = document.getElementById('nav-dashboard-link');
+      const drawerDashLink = document.getElementById('drawer-dashboard-link');
+      const drawerUnlogged = document.getElementById('drawer-unlogged');
+      const drawerLogged = document.getElementById('drawer-logged');
+
+      if (isLoggedIn && currentUser) {
+        unlogged.style.display = 'none';
+        logged.style.display = 'inline-flex';
+        if (drawerUnlogged) drawerUnlogged.style.display = 'none';
+        if (drawerLogged) drawerLogged.style.display = 'block';
+
+        const name = currentUser.displayName || currentUser.email.split('@')[0];
+        let targetHref = 'user.html';
+        let label = 'Dashboard';
+
+        if (currentUserRole === 'developer') {
+          targetHref = 'develover.html';
+          label = 'Developer Center';
+          badge.textContent = `${name} (DEV)`;
+        } else if (currentUserRole === 'admin') {
+          targetHref = 'admin.html';
+          label = 'Admin Panel';
+          badge.textContent = `${name} (ADMIN)`;
+        } else {
+          targetHref = 'user.html';
+          label = 'Dashboard';
+          badge.textContent = `${name}`;
+        }
+
+        badge.href = targetHref;
+
+        if (navDashItem && navDashLink) {
+          navDashItem.style.display = 'inline-block';
+          navDashLink.href = targetHref;
+          navDashLink.textContent = label;
+        }
+
+        if (drawerDashLink) {
+          drawerDashLink.style.display = 'block';
+          drawerDashLink.href = targetHref;
+          drawerDashLink.textContent = label;
+        }
+      } else {
+        unlogged.style.display = 'inline-flex';
+        logged.style.display = 'none';
+        if (drawerUnlogged) drawerUnlogged.style.display = 'block';
+        if (drawerLogged) drawerLogged.style.display = 'none';
+
+        if (navDashItem) navDashItem.style.display = 'none';
+        if (drawerDashLink) drawerDashLink.style.display = 'none';
+      }
+    }
+
+    // ==========================================
+    // 3. MAINTENANCE & BANNERS RENDER
+    // ==========================================
+    function checkMaintenanceStatus() {
+      const settings = getLocalData('website_settings', {});
+      const maint = settings.maintenance || {};
+      const maintOverlay = document.getElementById('maintenance-banner-view');
+
+      if (maint.active && maint.mode === 'MAINTENANCE') {
+        if (currentUserRole !== 'developer') {
+          maintOverlay.style.display = 'flex';
+          document.getElementById('maint-title').textContent = maint.title || 'RYEDZ PROMPT VAULT SEDANG DALAM PEMELIHARAAN';
+          document.getElementById('maint-desc').textContent = maint.desc || 'Kami sedang meningkatkan sistem.';
+          document.getElementById('maint-reason-box').textContent = 'Reason: ' + (maint.reason || 'Security update');
+        } else {
+          maintOverlay.style.display = 'none';
+        }
+      } else {
+        maintOverlay.style.display = 'none';
+      }
+
+      // Check notice banner
+      renderAnnouncementBanners();
+    }
+
+    function renderAnnouncementBanners() {
+      const bannerContainer = document.getElementById('announcement-banner-container');
+      const banners = getLocalData('banners', [
+        {
+          id: 'b-default',
+          title: '🔥 RYEDZ PROMPT VAULT v2.4 Live',
+          description: 'Experience seamless 2-input uploads with real-time deterministic vector thumbnails and Firestore syncing.',
+          isActive: true
+        }
+      ]);
+
+      const activeBanners = banners.filter(b => b.isActive);
+      if (activeBanners.length === 0) {
+        bannerContainer.innerHTML = '';
+        return;
+      }
+
+      bannerContainer.innerHTML = activeBanners.map(b => `
+        <div class="banner-bar">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="badge badge-purple">ANNOUNCEMENT</span>
+            <span style="font-weight:600; color:#fff;">${escapeXml(b.title)}</span>
+            <span style="color:var(--text-muted); font-size:0.85rem;" class="mobile-hide">${escapeXml(b.description || '')}</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="this.parentElement.remove()" style="padding:4px 8px;">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // ==========================================
+    // 4. LOAD & RENDER PROMPTS
+    // ==========================================
+    let allPublishedPrompts = [];
+
+    async function loadPrompts() {
+      const featGrid = document.getElementById('featured-prompts-grid');
+      const lateGrid = document.getElementById('latest-prompts-grid');
+
+      // Fetch from local store first, then sync with live Firestore if available
+      allPublishedPrompts = getLocalData('prompts', SEED_PROMPTS).filter(p => p.status === 'published');
+
+      if (db) {
+        try {
+          const snapshot = await db.collection('prompts').where('status', '==', 'published').get();
+          if (!snapshot.empty) {
+            const livePrompts = [];
+            snapshot.forEach(doc => livePrompts.push({ id: doc.id, ...doc.data() }));
+            if (livePrompts.length > 0) {
+              allPublishedPrompts = livePrompts;
+              setLocalData('prompts', livePrompts);
+            }
+          }
+        } catch (e) {
+          console.log('Using local vault prompts store');
+        }
+      }
+
+      if (allPublishedPrompts.length === 0) {
+        featGrid.innerHTML = `
+          <div class="glass" style="grid-column: 1 / -1; padding:40px; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:12px;">📭</div>
+            <h3 style="color:#fff; margin-bottom:8px;">No Prompts Published Yet</h3>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">Be the pioneer to contribute the first AI prompt to the vault!</p>
+            <button class="btn btn-primary btn-sm" onclick="handleUploadHeroClick()">Upload Prompt Now</button>
+          </div>
+        `;
+        lateGrid.innerHTML = '';
+        return;
+      }
+
+      // Render Featured (Up to 3)
+      const featured = allPublishedPrompts.slice(0, 3);
+      featGrid.innerHTML = featured.map(p => createPromptCardHTML(p)).join('');
+
+      // Render Latest
+      const latest = [...allPublishedPrompts].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 6);
+      lateGrid.innerHTML = latest.map(p => createPromptCardHTML(p)).join('');
+    }
+
+    function createPromptCardHTML(prompt) {
+      const thumbUrl = generateDeterministicThumbnail(prompt.id, prompt.title, prompt.aiModel);
+      const category = escapeXml(prompt.category || 'General');
+      const aiModel = escapeXml(prompt.aiModel || 'ChatGPT');
+      const title = escapeXml(prompt.title || 'Untitled Prompt');
+      const author = escapeXml(prompt.ownerEmail ? prompt.ownerEmail.split('@')[0] : 'Ryedz Creator');
+      const safeId = escapeXml(prompt.id);
+
+      return `
+        <div class="glass-card">
+          <div class="card-thumb-wrap">
+            <img src="${thumbUrl}" alt="${title}" class="card-thumb-svg" loading="lazy" />
+          </div>
+          <div class="card-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="badge badge-purple">${category}</span>
+              <span class="badge badge-blue">🤖 ${aiModel}</span>
+            </div>
+            <h3 class="card-title">${title}</h3>
+            <div class="card-meta">
+              <span>By ${author}</span>
+              <span>● Published</span>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-secondary btn-sm" onclick="openPromptDetail('${safeId}')">
+                Open Prompt
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="quickCopyPrompt('${safeId}')" title="Quick Copy">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // 5. PROMPT DETAIL MODAL & CLIPBOARD
+    // ==========================================
+    let activeDetailPrompt = null;
+
+    function openPromptDetail(id) {
+      const prompt = allPublishedPrompts.find(p => p.id === id);
+      if (!prompt) return;
+
+      activeDetailPrompt = prompt;
+      document.getElementById('detail-title').textContent = prompt.title;
+      document.getElementById('detail-content').value = prompt.content;
+      document.getElementById('detail-category-badge').textContent = `${prompt.category || 'General'} • 🤖 ${prompt.aiModel || 'ChatGPT'}`;
+      document.getElementById('detail-author').textContent = 'By ' + (prompt.ownerEmail ? prompt.ownerEmail.split('@')[0] : 'Anonymous');
+      document.getElementById('detail-date').textContent = prompt.createdAt ? new Date(prompt.createdAt).toLocaleDateString() : 'Active';
+
+      const thumbUrl = generateDeterministicThumbnail(prompt.id, prompt.title, prompt.aiModel);
+      document.getElementById('detail-thumb-container').innerHTML = `
+        <img src="${thumbUrl}" alt="Thumbnail" style="width:100%; height:100%; object-fit:cover;" />
+      `;
+
+      document.getElementById('prompt-detail-modal').classList.add('active');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('prompt-detail-modal').classList.remove('active');
+      activeDetailPrompt = null;
+    }
+
+    async function copyDetailPrompt() {
+      if (!activeDetailPrompt) return;
+      await performSafeCopy(activeDetailPrompt.content);
+    }
+
+    async function quickCopyPrompt(id) {
+      const prompt = allPublishedPrompts.find(p => p.id === id);
+      if (prompt) {
+        await performSafeCopy(prompt.content);
+      }
+    }
+
+    async function performSafeCopy(text) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          showToast('Prompt copied to clipboard successfully!', 'success');
+        } else {
+          // Fallback
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('Prompt copied to clipboard!', 'success');
+        }
+      } catch (e) {
+        showToast('Failed to copy. Please select and copy manually.', 'error');
+      }
+    }
+
+    function toggleDetailFavorite() {
+      if (!currentUser) {
+        openAuthModal('login');
+        showToast('Please login to save favorites.', 'warning');
+        return;
+      }
+      if (!activeDetailPrompt) return;
+
+      const favs = getLocalData('favorites_' + currentUser.uid, []);
+      const exists = favs.some(f => f.id === activeDetailPrompt.id);
+
+      if (exists) {
+        const filtered = favs.filter(f => f.id !== activeDetailPrompt.id);
+        setLocalData('favorites_' + currentUser.uid, filtered);
+        showToast('Removed from favorites.', 'info');
+      } else {
+        favs.push(activeDetailPrompt);
+        setLocalData('favorites_' + currentUser.uid, favs);
+        showToast('Saved to your favorites!', 'success');
+      }
+    }
+
+    // ==========================================
+    // 6. AUTHENTICATION MODAL & LOGIC
+    // ==========================================
+    let currentAuthTab = 'login';
+
+    function openAuthModal(tab = 'login') {
+      switchAuthTab(tab);
+      document.getElementById('auth-modal').classList.add('active');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.remove('active');
+      document.getElementById('auth-error-box').style.display = 'none';
+    }
+
+    function switchAuthTab(tab) {
+      currentAuthTab = tab;
+      const tabLogin = document.getElementById('tab-btn-login');
+      const tabReg = document.getElementById('tab-btn-register');
+      const tabReset = document.getElementById('tab-btn-reset');
+      const title = document.getElementById('auth-modal-title');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const nameGroup = document.getElementById('name-input-group');
+      const passGroup = document.getElementById('password-input-group');
+
+      [tabLogin, tabReg, tabReset].forEach(t => t.classList.remove('active'));
+
+      if (tab === 'login') {
+        tabLogin.classList.add('active');
+        title.textContent = 'Welcome Back';
+        submitBtn.textContent = 'Sign In';
+        nameGroup.style.display = 'none';
+        passGroup.style.display = 'block';
+      } else if (tab === 'register') {
+        tabReg.classList.add('active');
+        title.textContent = 'Create Free Account';
+        submitBtn.textContent = 'Register Account';
+        nameGroup.style.display = 'block';
+        passGroup.style.display = 'block';
+      } else {
+        tabReset.classList.add('active');
+        title.textContent = 'Reset Password';
+        submitBtn.textContent = 'Send Reset Email';
+        nameGroup.style.display = 'none';
+        passGroup.style.display = 'none';
+      }
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const displayName = document.getElementById('auth-name').value.trim();
+      const errorBox = document.getElementById('auth-error-box');
+      const submitBtn = document.getElementById('auth-submit-btn');
+
+      errorBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Authenticating...';
+
+      try {
+        if (currentAuthTab === 'register') {
+          // Special bootstrap rule: ryedzoffc@gmail.com is Developer
+          const assignedRole = (email === 'ryedzoffc@gmail.com') ? 'developer' : 'user';
+
+          if (auth) {
+            try {
+              const cred = await auth.createUserWithEmailAndPassword(email, password);
+              if (displayName && cred.user.updateProfile) {
+                await cred.user.updateProfile({ displayName: displayName });
+              }
+              if (db) {
+                await db.collection('users').doc(cred.user.uid).set({
+                  uid: cred.user.uid,
+                  email: email,
+                  displayName: displayName || email.split('@')[0],
+                  role: assignedRole,
+                  createdAt: Date.now(),
+                  status: 'active'
+                });
+              }
+            } catch (fbErr) {
+              // If Firebase auth throws (e.g. offline demo project), register locally
+              registerLocalUser(email, displayName, assignedRole);
+            }
+          } else {
+            registerLocalUser(email, displayName, assignedRole);
+          }
+
+          showToast('Account registered successfully! Redirecting...', 'success');
+          closeAuthModal();
+          setTimeout(() => {
+            window.location.href = assignedRole === 'developer' ? 'develover.html' : 'user.html';
+          }, 800);
+
+        } else if (currentAuthTab === 'login') {
+          if (auth) {
+            try {
+              await auth.signInWithEmailAndPassword(email, password);
+            } catch (fbErr) {
+              loginLocalUser(email, password);
+            }
+          } else {
+            loginLocalUser(email, password);
+          }
+
+          showToast('Login successful! Welcome back.', 'success');
+          closeAuthModal();
+          setTimeout(() => {
+            if (currentUserRole === 'developer') window.location.href = 'develover.html';
+            else if (currentUserRole === 'admin') window.location.href = 'admin.html';
+            else window.location.href = 'user.html';
+          }, 600);
+
+        } else if (currentAuthTab === 'reset') {
+          if (auth) {
+            try {
+              await auth.sendPasswordResetEmail(email);
+              showToast('Password reset link sent to your email.', 'info');
+              closeAuthModal();
+            } catch (e) {
+              showToast('Reset email sent (Simulated).', 'info');
+              closeAuthModal();
+            }
+          } else {
+            showToast('Password reset link sent to ' + email, 'info');
+            closeAuthModal();
+          }
+        }
+      } catch (err) {
+        errorBox.textContent = err.message || 'Authentication failed. Please verify credentials.';
+        errorBox.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        switchAuthTab(currentAuthTab);
+      }
+    }
+
+    function registerLocalUser(email, displayName, role) {
+      const users = getLocalData('users', []);
+      const existing = users.find(u => u.email === email);
+      if (existing) {
+        throw new Error('Email is already registered.');
+      }
+      const newUser = {
+        uid: 'user-' + Date.now(),
+        email: email,
+        displayName: displayName || email.split('@')[0],
+        role: role,
+        createdAt: Date.now()
+      };
+      users.push(newUser);
+      setLocalData('users', users);
+      currentUser = newUser;
+      currentUserRole = role;
+      setLocalData('session_user', newUser);
+      updateAuthUI(true);
+    }
+
+    function loginLocalUser(email, password) {
+      const users = getLocalData('users', []);
+      let user = users.find(u => u.email === email);
+      if (!user) {
+        // Auto create user if demoing
+        const role = (email === 'ryedzoffc@gmail.com') ? 'developer' : 'user';
+        user = {
+          uid: 'user-' + Date.now(),
+          email: email,
+          displayName: email.split('@')[0],
+          role: role,
+          createdAt: Date.now()
+        };
+        users.push(user);
+        setLocalData('users', users);
+      }
+      currentUser = user;
+      currentUserRole = user.role;
+      setLocalData('session_user', user);
+      updateAuthUI(true);
+    }
+
+    async function handleLogout() {
+      if (auth) {
+        try { await auth.signOut(); } catch (e) {}
+      }
+      currentUser = null;
+      currentUserRole = 'user';
+      try { localStorage.removeItem('RYEDZ_session_user'); } catch (e) {}
+      updateAuthUI(false);
+      showToast('Logged out successfully.', 'info');
+    }
+
+    function handleUploadHeroClick() {
+      if (!currentUser) {
+        openAuthModal('login');
+        showToast('Please login or register to upload your prompt.', 'info');
+      } else {
+        window.location.href = 'user.html#upload';
+      }
+    }
+
+    function handleHeroSearch(e) {
+      e.preventDefault();
+      const q = document.getElementById('hero-search-input').value.trim();
+      const ai = document.getElementById('hero-ai-select')?.value || 'all';
+      const params = [];
+      if (q) params.push(`q=${encodeURIComponent(q)}`);
+      if (ai && ai !== 'all') params.push(`ai=${encodeURIComponent(ai)}`);
+      window.location.href = params.length > 0 ? `promt.html?${params.join('&')}` : 'promt.html';
+    }
+
+    // ==========================================
+    // 7. FIREBASE CONFIG MODAL
+    // ==========================================
+    const fbModal = document.getElementById('firebase-config-modal');
+    document.getElementById('fb-config-btn').onclick = () => {
+      const cfg = getLocalData('firebase_config', DEFAULT_CONFIG);
+      document.getElementById('cfg-apiKey').value = cfg.apiKey || '';
+      document.getElementById('cfg-projectId').value = cfg.projectId || '';
+      document.getElementById('cfg-authDomain').value = cfg.authDomain || '';
+      document.getElementById('cfg-storageBucket').value = cfg.storageBucket || '';
+      fbModal.classList.add('active');
+    };
+
+    function closeFirebaseModal() {
+      fbModal.classList.remove('active');
+    }
+
+    function saveFirebaseConfig() {
+      const cfg = {
+        apiKey: document.getElementById('cfg-apiKey').value.trim() || DEFAULT_CONFIG.apiKey,
+        projectId: document.getElementById('cfg-projectId').value.trim() || DEFAULT_CONFIG.projectId,
+        authDomain: document.getElementById('cfg-authDomain').value.trim() || DEFAULT_CONFIG.authDomain,
+        storageBucket: document.getElementById('cfg-storageBucket').value.trim() || DEFAULT_CONFIG.storageBucket,
+        messagingSenderId: DEFAULT_CONFIG.messagingSenderId,
+        appId: DEFAULT_CONFIG.appId
+      };
+      setLocalData('firebase_config', cfg);
+      showToast('Firebase configuration saved! Reloading...', 'success');
+      setTimeout(() => window.location.reload(), 600);
+    }
+
+    function resetToDemoData() {
+      localStorage.removeItem('RYEDZ_firebase_config');
+      setLocalData('prompts', SEED_PROMPTS);
+      showToast('Reset to demo vault store.', 'info');
+      setTimeout(() => window.location.reload(), 500);
+    }
+
+    // ==========================================
+    // 8. TOAST NOTIFICATION UTILITY
+    // ==========================================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+
+      let icon = 'ℹ️';
+      let border = 'rgba(255, 255, 255, 0.15)';
+      if (type === 'success') { icon = '✓'; border = 'rgba(16, 185, 129, 0.4)'; }
+      if (type === 'error') { icon = '✕'; border = 'rgba(244, 63, 94, 0.4)'; }
+      if (type === 'warning') { icon = '⚠'; border = 'rgba(245, 158, 11, 0.4)'; }
+
+      toast.style.borderColor = border;
+      toast.innerHTML = `<span style="font-weight:700;">${icon}</span><span>${escapeXml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function toggleMobileNav() {
+      document.getElementById('mobile-drawer').classList.toggle('active');
+    }
+
+    // Bootstrap check
+    window.addEventListener('DOMContentLoaded', () => {
+      // Check stored session user
+      const sess = getLocalData('session_user', null);
+      if (sess) {
+        currentUser = sess;
+        currentUserRole = sess.role || 'user';
+        updateAuthUI(true);
+      }
+
+      initFirebase();
+      checkMaintenanceStatus();
+      loadPrompts();
+    });
+  </script>
+</body>
+</html>
