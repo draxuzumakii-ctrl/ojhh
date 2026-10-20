@@ -4,131 +4,231 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#08080c" />
-<title>RYEDZ PROMPT VAULT</title>
+<title>RYEDZ VAULT — Portfolio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="glassmorphism.css" />
 <style>
-  .prompt-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); 
-    gap: 20px; 
-    margin-top: 24px; 
+  /* CSS Khusus Landing Page Portofolio */
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  /* Background Ornamen */
+  .bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -1;
+    opacity: 0.5;
+  }
+  .orb-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: rgba(139, 92, 246, 0.3); }
+  .orb-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background: rgba(56, 189, 248, 0.2); }
+
+  /* Navbar Minimalis */
+  .navbar-wrapper {
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+  }
+  .brand-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #8b5cf6, #38bdf8);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 15px rgba(139,92,246,0.4);
+  }
+  .brand-icon svg { width: 20px; height: 20px; fill: #fff; }
+
+  /* Hero Section Portofolio */
+  .portfolio-hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .hero-badge {
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: #c4b5fd;
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-badge span {
+    width: 8px; height: 8px; border-radius: 50%; background: #8b5cf6;
+    box-shadow: 0 0 10px #8b5cf6;
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    background: linear-gradient(180deg, #ffffff 40%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-desc {
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    color: #94a3b8;
+    max-width: 600px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+
+  /* Tombol View Vault (Super Premium) */
+  .btn-view-vault {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 36px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 10px 30px -5px rgba(124, 58, 237, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .btn-view-vault:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 15px 40px -5px rgba(124, 58, 237, 0.7), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .btn-view-vault svg {
+    width: 20px; height: 20px;
+    transition: transform 0.3s ease;
+  }
+  .btn-view-vault:hover svg {
+    transform: translateX(4px);
+  }
+
+  /* Footer */
+  .footer-minimal {
+    padding: 24px;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.85rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+    z-index: 10;
   }
 </style>
 </head>
 <body>
 
+<!-- Ornamen Background -->
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+
 <!-- NAVBAR -->
-<div class="navbar-wrapper">
-  <header class="navbar-container">
-    <a href="index.html" class="brand">
-      <div class="brand-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg>
-      </div>
-      <span>RYEDZ VAULT</span>
-    </a>
-    
-    <div class="nav-actions">
-      <!-- Muncul kalau BELUM login -->
-      <div id="btn-login-area">
-        <a href="login.html" class="btn btn-primary">Login / Register</a>
-      </div>
-      <!-- Muncul kalau UDAH login -->
-      <div id="btn-dashboard-area" style="display:none;">
-        <a href="#" id="btn-goto-dashboard" class="btn btn-secondary">Dashboard</a>
-      </div>
+<header class="navbar-wrapper">
+  <a href="index.html" class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l-8.5-4.25L12 11.5l8.5-4.75L12 11z"/></svg>
     </div>
-  </header>
-</div>
-
-<!-- HERO SECTION -->
-<section class="hero-section" style="text-align: center; padding-top: 120px;">
-  <h1 class="hero-title" id="hero-title">EXPLORE AI PROMPTS</h1>
-  <p class="hero-description" id="hero-desc">Temukan prompt AI berkualitas tinggi untuk membantu pekerjaan dan kreativitasmu.</p>
-</section>
-
-<!-- PROMPT GRID -->
-<section class="container" style="padding-bottom: 60px;">
-  <div id="prompt-list" class="prompt-grid">
-    <!-- Loading Skeleton -->
-    <div class="glass-card" style="padding:20px;"><div class="skeleton" style="height:150px; margin-bottom:12px;"></div><div class="skeleton" style="height:20px; width:70%;"></div></div>
-    <div class="glass-card" style="padding:20px;"><div class="skeleton" style="height:150px; margin-bottom:12px;"></div><div class="skeleton" style="height:20px; width:70%;"></div></div>
-    <div class="glass-card" style="padding:20px;"><div class="skeleton" style="height:150px; margin-bottom:12px;"></div><div class="skeleton" style="height:20px; width:70%;"></div></div>
+    <span>RYEDZ VAULT</span>
+  </a>
+  
+  <div>
+    <!-- Tombol Login Muncul Kalau Belum Login -->
+    <a href="login.html" id="btn-login" class="btn btn-secondary btn-sm" style="padding: 10px 20px;">Login</a>
+    <!-- Tombol Dashboard Muncul Kalau Sudah Login -->
+    <a href="#" id="btn-dashboard" class="btn btn-secondary btn-sm" style="padding: 10px 20px; display: none;">Dashboard</a>
   </div>
-</section>
+</header>
+
+<!-- HERO SECTION (PORTOFOLIO) -->
+<main class="portfolio-hero">
+  <div class="hero-badge">
+    <span></span> v2.0 Now Live
+  </div>
+  
+  <h1 class="hero-title">
+    Discover The Best<br>AI Prompts.
+  </h1>
+  
+  <p class="hero-desc">
+    Koleksi kurasi prompt AI berkualitas tinggi untuk membantu pekerjaan, ngoding, dan kreativitasmu. Dibangun dengan antarmuka modern yang super mulus.
+  </p>
+
+  <!-- TOMBOL VIEW VAULT -->
+  <a href="promt.html" class="btn-view-vault">
+    View Prompt Vault
+    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+    </svg>
+  </a>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer-minimal">
+  &copy; 2026 RYEDZ VAULT. Built with Super Glassmorphism.
+</footer>
 
 <!-- FIREBASE SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
-
-<!-- CORE & CONFIG -->
 <script src="firebase-config.js"></script>
 <script src="firebase-init.js"></script>
-<script src="ryedz-core.js"></script>
 
 <script>
-  'use strict';
-
-  // 1. CEK STATUS LOGIN (Untuk Tombol Dashboard)
+  // Cek status login untuk ngubah tombol di kanan atas
   RyedzFB.onAuthChange((user, profile) => {
     if (user) {
-      document.getElementById('btn-login-area').style.display = 'none';
-      document.getElementById('btn-dashboard-area').style.display = 'block';
+      document.getElementById('btn-login').style.display = 'none';
       
+      const btnDash = document.getElementById('btn-dashboard');
+      btnDash.style.display = 'inline-flex';
+      
+      // Arahkan ke halaman yang bener
       let role = profile.role || 'user';
-      // Arahkan ke halaman yang tepat
-      let dashUrl = role === 'developer' ? 'develover.html' : 'user.html';
-      document.getElementById('btn-goto-dashboard').href = dashUrl;
+      btnDash.href = role === 'developer' ? 'develover.html' : 'user.html';
+      btnDash.textContent = role === 'developer' ? 'Developer Area' : 'Dashboard';
     } else {
-      document.getElementById('btn-login-area').style.display = 'block';
-      document.getElementById('btn-dashboard-area').style.display = 'none';
+      document.getElementById('btn-login').style.display = 'inline-flex';
+      document.getElementById('btn-dashboard').style.display = 'none';
     }
-  });
-
-  // 2. AMBIL DATA PROMPT DARI FIREBASE (REAL-TIME)
-  RyedzFB.listenPublishedPrompts((prompts) => {
-    const list = document.getElementById('prompt-list');
-    
-    // Kalau kosong
-    if (prompts.length === 0) {
-      list.innerHTML = `
-        <div class="glass" style="grid-column: 1/-1; text-align:center; padding:40px; color:#94a3b8;">
-          <div style="font-size:2rem; margin-bottom:12px;">📭</div>
-          <h3 style="color:#fff; margin-bottom:8px;">Belum Ada Prompt</h3>
-          <p>Jadilah yang pertama untuk mengupload prompt!</p>
-        </div>
-      `;
-      return;
-    }
-
-    // Render kartu prompt
-    list.innerHTML = prompts.map(p => `
-      <div class="glass-card" style="border-radius:16px; overflow:hidden; display:flex; flex-direction:column;">
-        <!-- Thumbnail SVG Deterministik -->
-        <img src="${Ryedz.generateThumbnail(p.id, p.title, p.aiModel)}" style="width:100%; display:block;" alt="${Ryedz.escapeXml(p.title)}">
-        
-        <div style="padding: 16px; flex:1; display:flex; flex-direction:column;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span class="badge badge-blue">${Ryedz.escapeXml(p.aiModel || 'ChatGPT')}</span>
-            <span class="badge badge-purple">${Ryedz.escapeXml(p.category || 'General')}</span>
-          </div>
-          
-          <h3 style="margin-bottom:8px; color:#fff; font-size:1.1rem; font-weight:700;">${Ryedz.escapeXml(p.title)}</h3>
-          
-          <p style="color:#94a3b8; font-size:0.85rem; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:16px; flex:1;">
-            ${Ryedz.escapeXml(p.content)}
-          </p>
-          
-          <div style="font-size:0.75rem; color:#64748b; border-top:1px solid rgba(255,255,255,0.05); padding-top:12px;">
-            By ${Ryedz.escapeXml((p.ownerEmail || 'creator').split('@')[0])}
-          </div>
-        </div>
-      </div>
-    `).join('');
   });
 </script>
+
 </body>
 </html>
