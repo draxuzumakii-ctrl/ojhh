@@ -12,7 +12,6 @@
 <link rel="stylesheet" href="glassmorphism.css" />
 <link rel="stylesheet" href="login-ios.css" />
 <style>
-  /* Page-specific tweaks */
   #featured-prompts-grid,
   #latest-prompts-grid {
     display: grid;
@@ -21,29 +20,12 @@
   }
   @media (max-width: 640px) {
     #featured-prompts-grid,
-    #latest-prompts-grid {
-      grid-template-columns: 1fr;
-    }
+    #latest-prompts-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
-<!-- 1. Firebase SDK: wajib dimuat sebelum inisialisasi -->
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
 
-<!-- 2. Konfigurasi Firebase -->
-<script src="./firebase-config.js"></script>
-
-<!-- 3. Inisialisasi Firebase -->
-<script src="./firebase-init.js"></script>
-
-<!-- 4. Core utilities -->
-<script src="./ryedz-core.js"></script>
-
-<!-- 5. Script khusus halaman -->
-<script src="./app.js"></script>
 <!-- ============================================================
      NAVBAR
      ============================================================ -->
@@ -123,7 +105,7 @@
   <div class="section-header">
     <div>
       <h2 class="section-title"><span style="color:#a855f7;">★</span> Featured Prompts</h2>
-      <p class="section-subtitle">Hand-curated, verified high-performance prompts from the community</p>
+      <p class="section-subtitle">Hand-curated, verified high-performance prompts</p>
     </div>
     <a href="promt.html" class="btn btn-secondary btn-sm">View All →</a>
   </div>
@@ -137,7 +119,7 @@
   <div class="section-header">
     <div>
       <h2 class="section-title"><span style="color:#38bdf8;">⚡</span> Latest Additions</h2>
-      <p class="section-subtitle">Freshly published AI prompts ready to copy and use</p>
+      <p class="section-subtitle">Freshly published AI prompts ready to copy</p>
     </div>
     <a href="promt.html?sort=latest" class="btn btn-secondary btn-sm">Explore More</a>
   </div>
@@ -214,7 +196,7 @@
       </div>
       <div id="password-input-group" style="margin-bottom:20px;">
         <label>Password</label>
-        <input type="password" id="auth-password" class="glass-input" placeholder="••••••••" minlength="6" autocomplete="current-password" />
+        <input type="password" id="auth-password" class="glass-input" placeholder="Min 6 characters" minlength="6" autocomplete="current-password" />
       </div>
       <button type="submit" id="auth-submit-btn">Sign In</button>
     </form>
@@ -260,385 +242,430 @@
   </div>
 </footer>
 
-<!-- Scripts -->
+<!-- ============================================================
+     SCRIPTS — URUTAN WAJIB
+     ============================================================ -->
+
+<!-- 1. Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
+<!-- 2. Firebase config & init -->
+<script src="firebase-config.js"></script>
+<script src="firebase-init.js"></script>
+
+<!-- 3. Core utilities -->
 <script src="ryedz-core.js"></script>
+
+<!-- 4. Page script -->
 <script>
-  'use strict';
-  const R = window.Ryedz;
+'use strict';
 
-  let currentUser = null;
-  let currentUserRole = 'user';
-  let allPublishedPrompts = [];
-  let activeDetailPrompt = null;
-  let currentAuthTab = 'login';
+// ============================================================
+// GUARD: pastikan semua libs sudah ke-load
+// ============================================================
+(function () {
+  const errors = [];
+  if (typeof window.firebase === 'undefined') errors.push('Firebase SDK');
+  if (typeof window.RyedzFirebase === 'undefined') errors.push('firebase-config.js');
+  if (typeof window.RyedzFB === 'undefined') errors.push('firebase-init.js');
+  if (typeof window.Ryedz === 'undefined') errors.push('ryedz-core.js');
 
-  /* ============================================================
-     AUTH
-     ============================================================ */
-  function openAuthModal(tab) {
-    switchAuthTab(tab || 'login');
-    document.getElementById('auth-modal').classList.add('active');
-    document.body.style.overflow = 'hidden';
+  if (errors.length > 0) {
+    document.body.innerHTML =
+      '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:sans-serif;background:#08080c;color:#fff;">' +
+        '<div style="max-width:480px;padding:32px;background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.3);border-radius:16px;text-align:center;">' +
+          '<div style="font-size:2.5rem;margin-bottom:16px;">⚠️</div>' +
+          '<h2 style="margin-bottom:12px;">File Tidak Ditemukan</h2>' +
+          '<p style="color:#94a3b8;margin-bottom:16px;">File berikut gagal di-load:</p>' +
+          '<ul style="text-align:left;color:#fda4af;list-style:none;padding:0;margin-bottom:20px;">' +
+            errors.map(function (e) { return '<li>❌ ' + e + '</li>'; }).join('') +
+          '</ul>' +
+          '<p style="color:#94a3b8;font-size:0.85rem;">Pastikan semua file ada di folder yang sama dengan index.html.</p>' +
+        '</div>' +
+      '</div>';
+    console.error('Missing files:', errors);
+    return;
   }
+})();
 
-  function closeAuthModal() {
-    document.getElementById('auth-modal').classList.remove('active');
-    document.body.style.overflow = '';
-    document.getElementById('auth-error-box').style.display = 'none';
+const R = window.Ryedz;
+const FB = window.RyedzFB;
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let currentUserRole = 'user';
+let allPublishedPrompts = [];
+let activeDetailPrompt = null;
+let currentAuthTab = 'login';
+
+// ============================================================
+// AUTH — MODAL
+// ============================================================
+function openAuthModal(tab) {
+  switchAuthTab(tab || 'login');
+  document.getElementById('auth-modal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAuthModal() {
+  document.getElementById('auth-modal').classList.remove('active');
+  document.body.style.overflow = '';
+  const errBox = document.getElementById('auth-error-box');
+  if (errBox) errBox.style.display = 'none';
+}
+
+function switchAuthTab(tab) {
+  currentAuthTab = tab;
+  ['login', 'register', 'reset'].forEach(function (t) {
+    const el = document.getElementById('tab-btn-' + t);
+    if (el) el.classList.toggle('active', t === tab);
+  });
+
+  const title = document.getElementById('auth-modal-title');
+  const submit = document.getElementById('auth-submit-btn');
+  const nameGroup = document.getElementById('name-input-group');
+  const passGroup = document.getElementById('password-input-group');
+
+  if (tab === 'login') {
+    title.textContent = 'Welcome Back';
+    submit.textContent = 'Sign In';
+    nameGroup.style.display = 'none';
+    passGroup.style.display = 'block';
+  } else if (tab === 'register') {
+    title.textContent = 'Create Free Account';
+    submit.textContent = 'Register Account';
+    nameGroup.style.display = 'block';
+    passGroup.style.display = 'block';
+  } else {
+    title.textContent = 'Reset Password';
+    submit.textContent = 'Send Reset Email';
+    nameGroup.style.display = 'none';
+    passGroup.style.display = 'none';
   }
+}
 
-  function switchAuthTab(tab) {
-    currentAuthTab = tab;
-    ['login', 'register', 'reset'].forEach(t => {
-      const el = document.getElementById('tab-btn-' + t);
-      if (el) el.classList.toggle('active', t === tab);
-    });
+async function handleAuthSubmit(e) {
+  e.preventDefault();
 
-    const title = document.getElementById('auth-modal-title');
-    const submit = document.getElementById('auth-submit-btn');
-    const nameGroup = document.getElementById('name-input-group');
-    const passGroup = document.getElementById('password-input-group');
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const displayName = document.getElementById('auth-name').value.trim();
+  const errBox = document.getElementById('auth-error-box');
+  const btn = document.getElementById('auth-submit-btn');
 
-    if (tab === 'login') {
-      title.textContent = 'Welcome Back';
-      submit.textContent = 'Sign In';
-      nameGroup.style.display = 'none';
-      passGroup.style.display = 'block';
-    } else if (tab === 'register') {
-      title.textContent = 'Create Free Account';
-      submit.textContent = 'Register Account';
-      nameGroup.style.display = 'block';
-      passGroup.style.display = 'block';
+  errBox.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+
+  try {
+    if (currentAuthTab === 'register') {
+      const result = await FB.register(email, password, displayName);
+      R.showToast('Akun dibuat! Redirect...', 'success');
+      closeAuthModal();
+      setTimeout(function () {
+        window.location.href = R.getRedirectForRole(result.role);
+      }, 700);
+
+    } else if (currentAuthTab === 'login') {
+      await FB.login(email, password);
+      R.showToast('Login berhasil!', 'success');
+      closeAuthModal();
+      // redirect akan otomatis dari onAuthChange
+
     } else {
-      title.textContent = 'Reset Password';
-      submit.textContent = 'Send Reset Email';
-      nameGroup.style.display = 'none';
-      passGroup.style.display = 'none';
+      await FB.sendPasswordReset(email);
+      R.showToast('Email reset terkirim. Cek inbox.', 'info');
+      closeAuthModal();
     }
+  } catch (err) {
+    console.error('[Auth Error]', err);
+    const msg = (err.message || 'Unknown error')
+      .replace('Firebase: ', '')
+      .replace(/\(auth\/.*\)\.?/, '')
+      .trim();
+    errBox.textContent = msg || 'Terjadi kesalahan. Coba lagi.';
+    errBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    switchAuthTab(currentAuthTab);
   }
+}
 
-  async function handleAuthSubmit(e) {
-    e.preventDefault();
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value;
-    const displayName = document.getElementById('auth-name').value.trim();
-    const errBox = document.getElementById('auth-error-box');
-    const btn = document.getElementById('auth-submit-btn');
+// ============================================================
+// UI UPDATE
+// ============================================================
+function updateAuthUI(isLoggedIn) {
+  const unlogged = document.getElementById('auth-buttons-unlogged');
+  const logged = document.getElementById('auth-buttons-logged');
+  const badge = document.getElementById('user-badge-name');
+  const navItem = document.getElementById('nav-dashboard-item');
+  const navLink = document.getElementById('nav-dashboard-link');
+  const drawerLink = document.getElementById('drawer-dashboard-link');
 
-    errBox.style.display = 'none';
-    btn.disabled = true;
-    btn.textContent = 'Processing...';
+  if (isLoggedIn && currentUser) {
+    if (unlogged) unlogged.style.display = 'none';
+    if (logged) logged.style.display = 'inline-flex';
 
-    try {
-      if (currentAuthTab === 'register') {
-        const role = email === 'ryedzoffc@gmail.com' ? 'developer' : 'user';
-        const users = R.getLocalData('users', []);
-        if (users.some(u => u.email === email)) {
-          throw new Error('Email sudah terdaftar. Silakan login.');
-        }
-        const newUser = {
-          uid: 'user-' + Date.now(),
-          email: email,
-          displayName: displayName || email.split('@')[0],
-          role: role,
-          status: 'active',
-          createdAt: Date.now()
-        };
-        users.push(newUser);
-        R.setLocalData('users', users);
-        R.setSessionUser(newUser);
-        currentUser = newUser;
-        currentUserRole = role;
-        R.showToast('Akun berhasil dibuat!', 'success');
-        closeAuthModal();
-        setTimeout(() => {
-          window.location.href = R.getRedirectForRole(role);
-        }, 500);
-      } else if (currentAuthTab === 'login') {
-        const users = R.getLocalData('users', []);
-        const match = users.find(u => u.email === email);
-        if (!match) throw new Error('Email tidak terdaftar.');
-        R.setSessionUser(match);
-        currentUser = match;
-        currentUserRole = match.role || 'user';
-        updateAuthUI(true);
-        R.showToast('Login berhasil!', 'success');
-        closeAuthModal();
-        setTimeout(() => {
-          window.location.href = R.getRedirectForRole(match.role);
-        }, 500);
-      } else {
-        R.showToast('Link reset dikirim (simulasi).', 'info');
-        closeAuthModal();
-      }
-    } catch (err) {
-      errBox.textContent = err.message;
-      errBox.style.display = 'block';
-    } finally {
-      btn.disabled = false;
-      switchAuthTab(currentAuthTab);
-    }
+    const name = currentUser.displayName || currentUser.email.split('@')[0];
+    const target = R.getRedirectForRole(currentUserRole);
+    const label = currentUserRole === 'developer' ? 'Developer Center'
+                : currentUserRole === 'admin' ? 'Admin Panel'
+                : 'Dashboard';
+
+    if (badge) { badge.textContent = name; badge.href = target; }
+    if (navItem) navItem.style.display = 'inline-block';
+    if (navLink) { navLink.href = target; navLink.textContent = label; }
+    if (drawerLink) { drawerLink.style.display = 'block'; drawerLink.href = target; drawerLink.textContent = label; }
+  } else {
+    if (unlogged) unlogged.style.display = 'inline-flex';
+    if (logged) logged.style.display = 'none';
+    if (navItem) navItem.style.display = 'none';
+    if (drawerLink) drawerLink.style.display = 'none';
   }
+}
 
-  function updateAuthUI(isLoggedIn) {
-    const unlogged = document.getElementById('auth-buttons-unlogged');
-    const logged = document.getElementById('auth-buttons-logged');
-    const badge = document.getElementById('user-badge-name');
-    const navItem = document.getElementById('nav-dashboard-item');
-    const navLink = document.getElementById('nav-dashboard-link');
-    const drawerLink = document.getElementById('drawer-dashboard-link');
+async function handleLogout() {
+  try { await FB.logout(); } catch (e) {}
+  currentUser = null;
+  currentUserRole = 'user';
+  updateAuthUI(false);
+  R.showToast('Logout berhasil.', 'info');
+}
 
-    if (isLoggedIn && currentUser) {
-      unlogged.style.display = 'none';
-      logged.style.display = 'inline-flex';
-
-      const name = currentUser.displayName || currentUser.email.split('@')[0];
-      const target = R.getRedirectForRole(currentUserRole);
-      const label = currentUserRole === 'developer' ? 'Developer Center'
-                  : currentUserRole === 'admin' ? 'Admin Panel'
-                  : 'Dashboard';
-
-      badge.textContent = name;
-      badge.href = target;
-
-      if (navItem && navLink) {
-        navItem.style.display = 'inline-block';
-        navLink.href = target;
-        navLink.textContent = label;
-      }
-      if (drawerLink) {
-        drawerLink.style.display = 'block';
-        drawerLink.href = target;
-        drawerLink.textContent = label;
-      }
-    } else {
-      unlogged.style.display = 'inline-flex';
-      logged.style.display = 'none';
-      if (navItem) navItem.style.display = 'none';
-      if (drawerLink) drawerLink.style.display = 'none';
-    }
+function handleUploadHeroClick() {
+  if (!currentUser) {
+    openAuthModal('login');
+    R.showToast('Login dulu untuk upload.', 'info');
+  } else {
+    window.location.href = 'user.html#upload';
   }
+}
 
-  function handleLogout() {
-    R.logout();
-    currentUser = null;
-    currentUserRole = 'user';
-    updateAuthUI(false);
-    R.showToast('Logout berhasil.', 'info');
-  }
+function toggleMobileDrawer() {
+  document.getElementById('mobile-drawer').classList.toggle('active');
+}
 
-  function handleUploadHeroClick() {
-    if (!currentUser) {
-      openAuthModal('login');
-      R.showToast('Login dulu untuk upload.', 'info');
-    } else {
-      window.location.href = 'user.html#upload';
-    }
-  }
+// ============================================================
+// LOAD PROMPTS
+// ============================================================
+function loadPrompts() {
+  const featGrid = document.getElementById('featured-prompts-grid');
+  const lateGrid = document.getElementById('latest-prompts-grid');
 
-  function toggleMobileDrawer() {
-    document.getElementById('mobile-drawer').classList.toggle('active');
-  }
+  // Skeleton
+  const skel = '<div class="glass-card" style="padding:0;">' +
+    '<div class="skeleton" style="width:100%;aspect-ratio:16/9;"></div>' +
+    '<div style="padding:16px;">' +
+      '<div class="skeleton" style="width:70%;height:22px;margin-bottom:8px;"></div>' +
+      '<div class="skeleton" style="width:90%;height:14px;"></div>' +
+    '</div></div>';
+  featGrid.innerHTML = skel + skel + skel;
+  lateGrid.innerHTML = skel + skel + skel;
 
-  /* ============================================================
-     PROMPTS
-     ============================================================ */
-  function showSkeletons() {
-    const skel = `
-      <div class="glass-card" style="padding:0;">
-        <div class="skeleton skeleton-thumb"></div>
-        <div style="padding:16px;">
-          <div class="skeleton skeleton-title" style="width:70%;"></div>
-          <div class="skeleton skeleton-text" style="width:90%;"></div>
-          <div class="skeleton skeleton-text" style="width:50%;"></div>
-        </div>
-      </div>`;
-    document.getElementById('featured-prompts-grid').innerHTML = skel + skel + skel;
-    document.getElementById('latest-prompts-grid').innerHTML = skel + skel + skel;
-  }
+  FB.listenPublishedPrompts(function (prompts) {
+    allPublishedPrompts = prompts;
 
-  function loadPrompts() {
-    showSkeletons();
-
-    setTimeout(() => {
-      allPublishedPrompts = R.getLocalData('prompts', R.SEED_PROMPTS)
-        .filter(p => p.status === 'published');
-
-      const featGrid = document.getElementById('featured-prompts-grid');
-      const lateGrid = document.getElementById('latest-prompts-grid');
-
-      if (allPublishedPrompts.length === 0) {
-        featGrid.innerHTML = `
-          <div class="glass" style="grid-column:1/-1;padding:48px 24px;text-align:center;">
-            <div style="font-size:2rem;margin-bottom:12px;">📭</div>
-            <h3 style="color:var(--text-primary);margin-bottom:8px;">No Prompts Yet</h3>
-            <p style="color:var(--text-secondary);margin-bottom:20px;">Be the first to contribute!</p>
-            <button class="btn btn-primary btn-sm" onclick="handleUploadHeroClick()">Upload Now</button>
-          </div>`;
-        lateGrid.innerHTML = '';
-        return;
-      }
-
-      let featured = allPublishedPrompts.filter(p => p.isFeatured).slice(0, 3);
-      if (featured.length === 0) featured = allPublishedPrompts.slice(0, 3);
-      featGrid.innerHTML = featured.map(createCardHTML).join('');
-
-      const latest = allPublishedPrompts
-        .slice()
-        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
-        .slice(0, 6);
-      lateGrid.innerHTML = latest.map(createCardHTML).join('');
-    }, 250);
-  }
-
-  function createCardHTML(p) {
-    const thumb = R.generateThumbnail(p.id, p.title, p.aiModel);
-    const cat = R.escapeXml(p.category || 'General');
-    const ai = R.escapeXml(p.aiModel || 'ChatGPT');
-    const title = R.escapeXml(p.title);
-    const author = R.escapeXml((p.ownerEmail || 'creator').split('@')[0]);
-    const id = R.escapeXml(p.id);
-
-    return `
-      <div class="glass-card">
-        <div class="card-thumb">
-          <img src="${thumb}" alt="${title}" loading="lazy" />
-        </div>
-        <div class="card-body">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;">
-            <span class="badge badge-purple" style="max-width:50%;overflow:hidden;text-overflow:ellipsis;">${cat}</span>
-            <span class="badge badge-blue" style="max-width:50%;overflow:hidden;text-overflow:ellipsis;">${ai}</span>
-          </div>
-          <h3 class="card-title">${title}</h3>
-          <div class="card-meta">
-            <span>By ${author}</span>
-            <span>●</span>
-          </div>
-          <div class="card-actions">
-            <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openPromptDetail('${id}')">Open</button>
-            <button class="btn btn-secondary btn-sm" onclick="quickCopyPrompt('${id}')" title="Quick copy">Copy</button>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  function openPromptDetail(id) {
-    const p = allPublishedPrompts.find(x => x.id === id);
-    if (!p) return;
-    activeDetailPrompt = p;
-
-    document.getElementById('detail-title').textContent = p.title;
-    document.getElementById('detail-content').value = p.content;
-    document.getElementById('detail-category-badge').textContent = p.category || 'General';
-    document.getElementById('detail-ai-badge').textContent = p.aiModel || 'ChatGPT';
-    document.getElementById('detail-author').textContent = 'By ' + (p.ownerEmail ? p.ownerEmail.split('@')[0] : 'Anonymous');
-    document.getElementById('detail-date').textContent = R.formatDate(p.createdAt);
-    document.getElementById('detail-thumb-container').innerHTML =
-      '<img src="' + R.generateThumbnail(p.id, p.title, p.aiModel) + '" style="width:100%;height:100%;object-fit:cover;" />';
-
-    const favBtn = document.getElementById('detail-fav-btn');
-    if (currentUser) {
-      const favs = R.getLocalData('favorites_' + currentUser.uid, []);
-      const isFav = favs.some(f => f.id === p.id);
-      favBtn.textContent = isFav ? '♥ Remove Favorite' : '♥ Favorite';
-    } else {
-      favBtn.textContent = '♥ Favorite';
-    }
-
-    document.getElementById('prompt-detail-modal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeDetailModal() {
-    document.getElementById('prompt-detail-modal').classList.remove('active');
-    document.body.style.overflow = '';
-    activeDetailPrompt = null;
-  }
-
-  async function copyDetailPrompt() {
-    if (!activeDetailPrompt) return;
-    const ok = await R.copyText(activeDetailPrompt.content);
-    R.showToast(ok ? 'Prompt copied!' : 'Gagal copy.', ok ? 'success' : 'error');
-  }
-
-  async function quickCopyPrompt(id) {
-    const p = allPublishedPrompts.find(x => x.id === id);
-    if (!p) return;
-    // increment copiedCount
-    const stored = R.getLocalData('prompts', []);
-    const match = stored.find(x => x.id === id);
-    if (match) {
-      match.copiedCount = (match.copiedCount || 0) + 1;
-      R.setLocalData('prompts', stored);
-    }
-    const ok = await R.copyText(p.content);
-    R.showToast(ok ? 'Prompt copied!' : 'Gagal copy.', ok ? 'success' : 'error');
-  }
-
-  function toggleDetailFavorite() {
-    if (!currentUser) {
-      closeDetailModal();
-      openAuthModal('login');
-      R.showToast('Login dulu untuk favorite.', 'warning');
+    if (prompts.length === 0) {
+      featGrid.innerHTML =
+        '<div class="glass" style="grid-column:1/-1;padding:48px 24px;text-align:center;">' +
+          '<div style="font-size:2rem;margin-bottom:12px;">📭</div>' +
+          '<h3 style="color:var(--text-primary);margin-bottom:8px;">Belum ada prompt</h3>' +
+          '<p style="color:var(--text-secondary);margin-bottom:20px;">Jadilah yang pertama upload!</p>' +
+          '<button class="btn btn-primary btn-sm" onclick="handleUploadHeroClick()">Upload Now</button>' +
+        '</div>';
+      lateGrid.innerHTML = '';
       return;
     }
-    if (!activeDetailPrompt) return;
 
-    const key = 'favorites_' + currentUser.uid;
-    const favs = R.getLocalData(key, []);
-    const idx = favs.findIndex(f => f.id === activeDetailPrompt.id);
+    let featured = prompts.filter(function (p) { return p.isFeatured; }).slice(0, 3);
+    if (featured.length === 0) featured = prompts.slice(0, 3);
+    featGrid.innerHTML = featured.map(createCardHTML).join('');
 
-    if (idx >= 0) {
-      favs.splice(idx, 1);
-      R.showToast('Dihapus dari favorit.', 'info');
-    } else {
-      favs.push(activeDetailPrompt);
-      R.showToast('Ditambahkan ke favorit!', 'success');
+    const latest = prompts.slice().sort(function (a, b) {
+      const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return tb - ta;
+    }).slice(0, 6);
+    lateGrid.innerHTML = latest.map(createCardHTML).join('');
+  });
+}
+
+function createCardHTML(p) {
+  const thumb = R.generateThumbnail(p.id, p.title, p.aiModel);
+  return '<div class="glass-card">' +
+    '<div class="card-thumb"><img src="' + thumb + '" alt="' + R.escapeXml(p.title) + '" loading="lazy" /></div>' +
+    '<div class="card-body">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;gap:6px;">' +
+        '<span class="badge badge-purple" style="max-width:50%;overflow:hidden;text-overflow:ellipsis;">' + R.escapeXml(p.category || 'General') + '</span>' +
+        '<span class="badge badge-blue" style="max-width:50%;overflow:hidden;text-overflow:ellipsis;">' + R.escapeXml(p.aiModel || 'ChatGPT') + '</span>' +
+      '</div>' +
+      '<h3 class="card-title">' + R.escapeXml(p.title) + '</h3>' +
+      '<div class="card-meta">' +
+        '<span>By ' + R.escapeXml((p.ownerEmail || 'creator').split('@')[0]) + '</span>' +
+      '</div>' +
+      '<div class="card-actions">' +
+        '<button class="btn btn-primary btn-sm" style="flex:1;" onclick="openPromptDetail(\'' + p.id + '\')">Open</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="quickCopyPrompt(\'' + p.id + '\')">Copy</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// ============================================================
+// DETAIL MODAL
+// ============================================================
+async function openPromptDetail(id) {
+  const p = allPublishedPrompts.find(function (x) { return x.id === id; });
+  if (!p) return;
+
+  activeDetailPrompt = p;
+
+  document.getElementById('detail-title').textContent = p.title;
+  document.getElementById('detail-content').value = p.content;
+  document.getElementById('detail-category-badge').textContent = p.category || 'General';
+  document.getElementById('detail-ai-badge').textContent = p.aiModel || 'ChatGPT';
+  document.getElementById('detail-author').textContent = 'By ' + (p.ownerEmail ? p.ownerEmail.split('@')[0] : 'Anonymous');
+  document.getElementById('detail-date').textContent = R.formatDate(p.createdAt);
+  document.getElementById('detail-thumb-container').innerHTML =
+    '<img src="' + R.generateThumbnail(p.id, p.title, p.aiModel) + '" style="width:100%;height:100%;object-fit:cover;" />';
+
+  const favBtn = document.getElementById('detail-fav-btn');
+  if (currentUser) {
+    try {
+      const isFav = await FB.isFavorite(currentUser.uid, p.id);
+      favBtn.textContent = isFav ? '♥ Remove Favorite' : '♥ Favorite';
+    } catch {
+      favBtn.textContent = '♥ Favorite';
     }
-    R.setLocalData(key, favs);
-    document.getElementById('detail-fav-btn').textContent =
-      idx >= 0 ? '♥ Favorite' : '♥ Remove Favorite';
+  } else {
+    favBtn.textContent = '♥ Favorite';
   }
 
-  /* ============================================================
-     BOOTSTRAP
-     ============================================================ */
-  document.addEventListener('DOMContentLoaded', () => {
-    // Load session
-    const sess = R.getSessionUser();
-    if (sess) {
-      currentUser = sess;
-      currentUserRole = sess.role || 'user';
-      updateAuthUI(true);
+  document.getElementById('prompt-detail-modal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetailModal() {
+  document.getElementById('prompt-detail-modal').classList.remove('active');
+  document.body.style.overflow = '';
+  activeDetailPrompt = null;
+}
+
+async function copyDetailPrompt() {
+  if (!activeDetailPrompt) return;
+  const ok = await R.copyText(activeDetailPrompt.content);
+  if (ok) FB.incrementCopiedCount(activeDetailPrompt.id);
+  R.showToast(ok ? 'Prompt copied!' : 'Gagal copy.', ok ? 'success' : 'error');
+}
+
+async function quickCopyPrompt(id) {
+  const p = allPublishedPrompts.find(function (x) { return x.id === id; });
+  if (!p) return;
+  const ok = await R.copyText(p.content);
+  if (ok) FB.incrementCopiedCount(id);
+  R.showToast(ok ? 'Prompt copied!' : 'Gagal copy.', ok ? 'success' : 'error');
+}
+
+async function toggleDetailFavorite() {
+  if (!currentUser) {
+    closeDetailModal();
+    openAuthModal('login');
+    R.showToast('Login dulu untuk favorite.', 'warning');
+    return;
+  }
+  if (!activeDetailPrompt) return;
+
+  try {
+    const isFav = await FB.isFavorite(currentUser.uid, activeDetailPrompt.id);
+    if (isFav) {
+      await FB.removeFavorite(currentUser.uid, activeDetailPrompt.id);
+      document.getElementById('detail-fav-btn').textContent = '♥ Favorite';
+      R.showToast('Dihapus dari favorit.', 'info');
+    } else {
+      await FB.addFavorite(currentUser.uid, activeDetailPrompt);
+      document.getElementById('detail-fav-btn').textContent = '♥ Remove Favorite';
+      R.showToast('Ditambahkan ke favorit!', 'success');
     }
+  } catch (err) {
+    console.error(err);
+    R.showToast('Gagal: ' + err.message, 'error');
+  }
+}
 
-    // Apply hero from settings
-    const st = R.getLocalData('website_settings', {});
-    if (st.heroTitle) document.getElementById('hero-title-text').textContent = st.heroTitle;
-    if (st.heroDesc) document.getElementById('hero-desc-text').textContent = st.heroDesc;
-    if (st.footerText) document.getElementById('footer-copy').textContent = st.footerText;
+// ============================================================
+// EXPOSE FUNCTIONS KE GLOBAL (untuk onclick di HTML)
+// ============================================================
+window.openAuthModal = openAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.switchAuthTab = switchAuthTab;
+window.handleAuthSubmit = handleAuthSubmit;
+window.handleLogout = handleLogout;
+window.handleUploadHeroClick = handleUploadHeroClick;
+window.toggleMobileDrawer = toggleMobileDrawer;
+window.openPromptDetail = openPromptDetail;
+window.closeDetailModal = closeDetailModal;
+window.copyDetailPrompt = copyDetailPrompt;
+window.quickCopyPrompt = quickCopyPrompt;
+window.toggleDetailFavorite = toggleDetailFavorite;
 
-    R.checkMaintenance();
-    loadPrompts();
+// ============================================================
+// BOOTSTRAP
+// ============================================================
+document.addEventListener('DOMContentLoaded', function () {
 
-    // Click outside modal to close
-    document.querySelectorAll('.modal-backdrop').forEach(bd => {
-      bd.addEventListener('click', e => {
-        if (e.target === bd) {
-          bd.classList.remove('active');
-          document.body.style.overflow = '';
-        }
+  // Auth state listener
+  FB.onAuthChange(function (user, profile) {
+    if (user && profile) {
+      currentUser = Object.assign({ uid: user.uid, email: user.email }, profile);
+      currentUserRole = profile.role || 'user';
+      updateAuthUI(true);
+    } else {
+      currentUser = null;
+      currentUserRole = 'user';
+      updateAuthUI(false);
+    }
+  });
+
+  // Load hero text dari settings
+  R.getLocalData('website_settings', function () {});
+  const settings = R.getLocalData('website_settings', {});
+  const heroTitle = document.getElementById('hero-title-text');
+  const heroDesc = document.getElementById('hero-desc-text');
+  const footerCopy = document.getElementById('footer-copy');
+  if (settings.heroTitle && heroTitle) heroTitle.textContent = settings.heroTitle;
+  if (settings.heroDesc && heroDesc) heroDesc.textContent = settings.heroDesc;
+  if (settings.footerText && footerCopy) footerCopy.textContent = settings.footerText;
+
+  // Load prompts
+  loadPrompts();
+
+  // Maintenance check
+  R.checkMaintenance();
+
+  // ESC close modal
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-backdrop.active').forEach(function (m) {
+        m.classList.remove('active');
       });
-    });
+      document.body.style.overflow = '';
+    }
+  });
 
-    // ESC to close
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-backdrop.active').forEach(m => m.classList.remove('active'));
+  // Click backdrop close
+  document.querySelectorAll('.modal-backdrop').forEach(function (bd) {
+    bd.addEventListener('click', function (e) {
+      if (e.target === bd) {
+        bd.classList.remove('active');
         document.body.style.overflow = '';
       }
     });
   });
+});
 </script>
 </body>
-</html>
+  </html>
